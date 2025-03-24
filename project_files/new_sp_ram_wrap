@@ -1,0 +1,71 @@
+//Edited sp_ram_wrap for replacing 8192*32 RAM with 16 2048*8 RAMs 
+//Latest edit: 2025.3.23 Created the first version.
+module sp_ram_wrap
+  #(
+    parameter RAM_SIZE   = 32768,             // Total size in bytes (8192 * 32 = 32768)
+    parameter ADDR_WIDTH = $clog2(RAM_SIZE), // Address width based on RAM size
+    parameter DATA_WIDTH = 32                // Data width (32 bits)
+  )(
+    // Clock and Reset
+    input  logic                    clk,
+    input  logic                    rstn_i,
+    input  logic                    en_i,
+    input  logic [ADDR_WIDTH-1:0]   addr_i,
+    input  logic [DATA_WIDTH-1:0]   wdata_i,
+    output logic [DATA_WIDTH-1:0]   rdata_o,
+    input  logic                    we_i,
+    input  logic [DATA_WIDTH/8-1:0] be_i,
+    input  logic                    bypass_en_i
+  );
+
+  // RAM parameters for each of the 16 blocks
+  localparam RAM_BLOCK_SIZE = 2048;   // Number of entries per block (2048)
+  localparam RAM_BLOCK_WIDTH = 8;     // Data width per block (8 bits)
+  localparam NUM_BLOCKS = 16;         // Total number of RAM blocks (16)
+
+  // Internal signal for each of the 16 RAM blocks' outputs
+  logic [RAM_BLOCK_WIDTH-1:0] ram_out_int [NUM_BLOCKS-1:0];
+
+  // Address decoding for selecting the RAM block
+  logic [3:0] ram_block_select;      // Selects one of the 16 RAM blocks (4 bits)
+  logic [10:0] addr_within_block;    // Address within a selected RAM block (11 bits)
+
+  // Address decoding logic
+  assign ram_block_select = addr_i[ADDR_WIDTH-1:ADDR_WIDTH-4];  // Upper 4 bits of the address to select the block
+  assign addr_within_block = addr_i[ADDR_WIDTH-5:0];             // Lower bits to select the word within the block
+
+  // Instantiation of 16 individual 2048x8 RAM blocks
+  genvar i;
+  generate
+    for (i = 0; i < NUM_BLOCKS; i = i + 1) begin : ram_block_gen
+      sp_ram_block
+        #(
+          .RAM_SIZE (RAM_BLOCK_SIZE),
+          .DATA_WIDTH (RAM_BLOCK_WIDTH)
+        ) ram_i
+        (
+          .clk     (clk),
+          .rstn_i  (rstn_i),
+          .en_i    (en_i),
+          .addr_i  (addr_within_block),
+          .wdata_i (wdata_i[RAM_BLOCK_WIDTH*i +: RAM_BLOCK_WIDTH]),  // Select appropriate part of the data
+          .rdata_o (ram_out_int[i]),
+          .we_i    (we_i),
+          .be_i    (be_i)
+        );
+    end
+  endgenerate
+
+  // Combine the outputs from the 16 RAM blocks to form a 32-bit word
+  always_comb begin
+    case (ram_block_select)
+      4'b0000: rdata_o = {ram_out_int[15], ram_out_int[14], ram_out_int[13], ram_out_int[12]}; // Block 0
+      4'b0001: rdata_o = {ram_out_int[11], ram_out_int[10], ram_out_int[9], ram_out_int[8]};   // Block 1
+      4'b0010: rdata_o = {ram_out_int[7], ram_out_int[6], ram_out_int[5], ram_out_int[4]};     // Block 2
+      4'b0011: rdata_o = {ram_out_int[3], ram_out_int[2], ram_out_int[1], ram_out_int[0]};     // Block 3
+      // Repeat this pattern for all 16 blocks (total 16 cases)
+      default: rdata_o = 32'b0;
+    endcase
+  end
+
+endmodule
