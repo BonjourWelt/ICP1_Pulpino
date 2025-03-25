@@ -36,7 +36,7 @@ integer counter [TOTAL_COUNTER_WIDTH]; //11 bits for addresses 4 bits for enable
               end
         end
 
-    rdata_o <= mem[addr];
+    rdata_o <= mem[addr]; // havent thought about this part yet
     end
 //-----------combinational: break down 32 bits into 4 bytes----
     genvar w;
