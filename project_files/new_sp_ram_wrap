@@ -26,15 +26,15 @@ module sp_ram_wrap
   localparam RAM_COUNT = 16;   // 16 RAMs，2048x8bit each
 
   logic [10:0] addr_ram;       // 11-bit RAM internal address
-  logic [1:0] group_sel;       // 选择 4 片 RAM 的组
+  logic [1:0] group_sel;       // RAM group selection 
 
-  assign addr_ram = addr_i[14:4]; // 11-bit 地址 (2048 行)
-  assign group_sel = addr_i[3:2];   // 选择4个 RAM 片的组
+  assign addr_ram = addr_i[14:4]; 
+  assign group_sel = addr_i[3:2];   
 
-  // 16 片 2048x8bit RAM 的数据端口
+  // 16 outputs of RAMs
   logic [7:0] ram_dout[RAM_COUNT-1:0];
 
-  // 16 片 RAM 片实例化
+  // 16 RAMs instantiation
   genvar i;
   generate
     for (i = 0; i < RAM_COUNT; i = i + 1) begin : ram_block
@@ -42,8 +42,8 @@ module sp_ram_wrap
         .CK    ( clk      ),
         .CSN( !en_i ), // Low activate
         .A ( addr_ram ),
-        .WEN   ( we_i & (group_sel == (i/4)) & be_i[i%4] ), // 选择特定 RAM 并匹配 `be`
-        .D( wdata_i[(i%4)*8 +: 8] ), // 选择特定字节
+        .WEN   ( we_i & (group_sel == (i/4)) & be_i[i%4] ), // RAM selection, we & group selection & RAM selection
+        .D( wdata_i[(i%4)*8 +: 8] ), // input 
         .Q( ram_dout[i] ),
         .RY(),
         .TBYPASS( bypass_en_i )
@@ -51,7 +51,7 @@ module sp_ram_wrap
     end
   endgenerate
 
-  // 读取数据组合（从 4 个 RAM 片拼装 32-bit 数据）
+  // Output( combine 4 RAMs to 32-bit data)
   always_comb begin
     case (group_sel)
       2'b00: rdata_o = {ram_dout[3], ram_dout[2], ram_dout[1], ram_dout[0]};
