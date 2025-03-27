@@ -1,4 +1,5 @@
 // Copyright 2017 ETH Zurich and University of Bologna.
+//Last edit: 2025.3.27. Change to right ram.
 
 `include "config.sv"
 
@@ -92,7 +93,7 @@ end
    genvar i;
    generate
      for (i = 0; i < 16; i++) begin : sram_banks
-        ST_SPHS_2048x8m8_L u_sram (
+        ST_SPHDL_2048x8m8_L u_sram (
          .CK (clk),
          .WEN(we_i && (bank_select == i)), // Enable only the selected SRAM
          .CSN (en_i),
