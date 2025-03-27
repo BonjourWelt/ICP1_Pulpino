@@ -39,7 +39,7 @@ module sp_ram_wrap
   genvar i;
   generate
     for (i = 0; i < RAM_COUNT; i = i + 1) begin : ram_block
-      ST_SPHS_2048x8m8_L u_sram (
+      ST_SPHDL_2048x8m8_L u_sram (
         .CK    ( clk      ),
         .CSN( !en_i ), // Low activate
         .A ( addr_ram ),
