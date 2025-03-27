@@ -1,7 +1,11 @@
 //Edited sp_ram_wrap for replacing 8192*32 RAM with 16 2048*8 RAMs 
 //Latest edit: 2025.3.23 Created the first version.
-//Latest edit: 2025.3.26 Changed the structural logic to 4 groups with 4 rams in each group
-
+//Latest edit: 2025.3.26 Changed the structural logic to 4 groups with 4 rams in each group. Now we don't write each 32 bits data in one 2048 ram, 
+              //rather break it down into 4 sections, and write each section in one of the 4 rams in the same group.
+              //Adress break down: [14:4] <= 11 bits address in each 2048*8 ram;
+              //                   [3:2] <= 2 bits for selecting one of 4 ram groups;
+              //                   [1:0] <= unused bits.
+ 
 module sp_ram_wrap
 #(
     parameter RAM_SIZE   = 32768,              // in bytes
@@ -18,7 +22,7 @@ module sp_ram_wrap
     input  logic                    bypass_en_i
 );
 
-  // RAM 片参数
+  // RAM parameter
   localparam RAM_DEPTH = 2048;
   localparam RAM_COUNT = 16;   // 16 个 RAM，每个 2048x8bit
 
@@ -35,19 +39,9 @@ module sp_ram_wrap
   genvar i;
   generate
     for (i = 0; i < RAM_COUNT; i = i + 1) begin : ram_block
-      sp_ram_2048x8 ram_inst (
-
-	output [Bits-1 : 0] Q;
-        
-        output RY;   
-        
-        input [Bits-1 : 0] D;
-	input [Addr-1 : 0] A;
-	        
-        input CK, CSN, TBYPASS, WEN;
-
+      ST_SPHS_2048x8m8_L u_sram (
         .CK    ( clk      ),
-        .CSN( ),
+        .CSN( !en_i ), // Low activate
         .A ( addr_ram ),
         .WEN   ( we_i & (group_sel == (i/4)) & be_i[i%4] ), // 选择特定 RAM 并匹配 `be`
         .D( wdata_i[(i%4)*8 +: 8] ), // 选择特定字节
@@ -67,8 +61,5 @@ module sp_ram_wrap
       2'b11: rdata_o = {ram_dout[15], ram_dout[14], ram_dout[13], ram_dout[12]};
     endcase
   end
-
-endmodule
-
 
 endmodule
