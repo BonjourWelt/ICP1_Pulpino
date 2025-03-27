@@ -1,6 +1,6 @@
 //Edited sp_ram_wrap for replacing 8192*32 RAM with 16 2048*8 RAMs 
-//Latest edit: 2025.3.23 Created the first version.
-//Latest edit: 2025.3.26 Changed the structural logic to 4 groups with 4 rams in each group. Now we don't write each 32 bits data in one 2048 ram, 
+//Last edit: 2025.3.23 Created the first version.
+//Last edit: 2025.3.26 Changed the structural logic to 4 groups with 4 rams in each group. Now we don't write each 32 bits data in one 2048 ram, 
               //rather break it down into 4 sections, and write each section in one of the 4 rams in the same group.
               //Adress break down: [14:4] <= 11 bits address in each 2048*8 ram;
               //                   [3:2] <= 2 bits for selecting one of 4 ram groups;
@@ -23,10 +23,9 @@ module sp_ram_wrap
 );
 
   // RAM parameter
-  localparam RAM_DEPTH = 2048;
-  localparam RAM_COUNT = 16;   // 16 个 RAM，每个 2048x8bit
+  localparam RAM_COUNT = 16;   // 16 RAMs，2048x8bit each
 
-  logic [10:0] addr_ram;       // 11-bit RAM 内部地址
+  logic [10:0] addr_ram;       // 11-bit RAM internal address
   logic [3:0] group_sel;       // 选择 4 片 RAM 的组
 
   assign addr_ram = addr_i[14:4]; // 11-bit 地址 (2048 行)
