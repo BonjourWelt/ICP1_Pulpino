@@ -26,7 +26,7 @@ module sp_ram_wrap
   localparam RAM_COUNT = 16;   // 16 RAMs，2048x8bit each
 
   logic [10:0] addr_ram;       // 11-bit RAM internal address
-  logic [3:0] group_sel;       // 选择 4 片 RAM 的组
+  logic [1:0] group_sel;       // 选择 4 片 RAM 的组
 
   assign addr_ram = addr_i[14:4]; // 11-bit 地址 (2048 行)
   assign group_sel = addr_i[3:2];   // 选择4个 RAM 片的组
