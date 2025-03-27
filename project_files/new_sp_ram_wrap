@@ -12,6 +12,7 @@ module sp_ram_wrap
     parameter ADDR_WIDTH = $clog2(RAM_SIZE),   //15 bits address
     parameter DATA_WIDTH = 32
 )(
+    input  logic                    clk,
     input  logic                    rstn_i,
     input  logic                    en_i,
     input  logic [ADDR_WIDTH-1:0]   addr_i,
