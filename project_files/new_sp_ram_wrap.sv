@@ -1,3 +1,4 @@
+```verilog
 //Edited sp_ram_wrap for replacing 8192*32 RAM with 16 2048*8 RAMs 
 //Last edit: 2025.3.23 Created the first version.
 //Last edit: 2025.3.26 Changed the structural logic to 4 groups with 4 rams in each group. Now we don't write each 32 bits data in one 2048 ram, 
