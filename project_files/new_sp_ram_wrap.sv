@@ -5,6 +5,9 @@
               //Adress break down: [14:4] <= 11 bits address in each 2048*8 ram;
               //                   [3:2] <= 2 bits for selecting one of 4 ram groups;
               //                   [1:0] <= unused bits.
+//Last edit: 2025.3.28 Modified the group_sel signal and signals connection. 
+
+`include "config.sv"
 
 module sp_ram_wrap
   #(
@@ -71,9 +74,13 @@ module sp_ram_wrap
   logic [10:0] addr_ram;       // 11-bit RAM internal address
   logic [1:0] group_sel;       // RAM group selection 
 
-  assign addr_ram = addr_i[14:4]; 
-  assign group_sel = addr_i[3:2];   
-
+  assign addr_ram = addr_i[12:2];
+	always @(posedge clk or rstn_i) begin
+   if (~rstn_i)
+   group_sel <= 0;
+	 else 
+		group_sel <= addr_i[14:13];   
+	end
   // 16 outputs of RAMs
   logic [7:0] ram_dout[RAM_COUNT-1:0];
 
@@ -83,7 +90,7 @@ module sp_ram_wrap
     for (i = 0; i < RAM_COUNT; i = i + 1) begin : ram_block
       ST_SPHDL_2048x8m8_L u_sram (
         .CK    ( clk      ),
-        .CSN( ~(en_i & (group_sel == (i/4)) & be_i[i%4]) ), // RAM selection
+        .CSN( ~(en_i & (addr_i[14:13] == (i/4)) & be_i[i%4]) ), // RAM selection
         .A ( addr_ram ),
         .WEN   ( ~we_i  ), 
         .D( wdata_i[(i%4)*8 +: 8] ), // input 
@@ -97,6 +104,7 @@ module sp_ram_wrap
   // Output( combine 4 RAMs to 32-bit data)
   always_comb begin
     case (group_sel)
+	
       2'b00: rdata_o = {ram_dout[3], ram_dout[2], ram_dout[1], ram_dout[0]};
       2'b01: rdata_o = {ram_dout[7], ram_dout[6], ram_dout[5], ram_dout[4]};
       2'b10: rdata_o = {ram_dout[11], ram_dout[10], ram_dout[9], ram_dout[8]};
@@ -106,3 +114,7 @@ module sp_ram_wrap
 `endif
 
 endmodule
+
+//ram_block[0]/u_sram/D
+//# ** Error: (vish-4014) No objects found matching '/tb/top_i/core_region_i/instr_mem/sp_ram_wrap_i/ram_block[0]/u_sram/D'.
+//add wave -noupdate -radix hexadecimal {/tb/top_i/core_region_i/instr_mem/sp_ram_wrap_i/sp_ram_i}
