@@ -6,6 +6,7 @@
               //                   [3:2] <= 2 bits for selecting one of 4 ram groups;
               //                   [1:0] <= unused bits.
 //Last edit: 2025.3.28 Modified the group_sel signal and signals connection. 
+//Last edit: 2025.4.1 Happy April Fool's day! Modified the chip selection signal, now the read data are always right (not a joke).
 
 `include "config.sv"
 
