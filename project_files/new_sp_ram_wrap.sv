@@ -90,7 +90,7 @@ module sp_ram_wrap
     for (i = 0; i < RAM_COUNT; i = i + 1) begin : ram_block
       ST_SPHDL_2048x8m8_L u_sram (
         .CK    ( clk      ),
-        .CSN( ~(en_i & (addr_i[14:13] == (i/4)) & be_i[i%4]) ), // RAM selection
+        .CSN( ~(en_i & (addr_i[14:13] == (i/4)) & ((we_i & be_i[i%4]) | ~we_i) ) ), // RAM selection
         .A ( addr_ram ),
         .WEN   ( ~we_i  ), 
         .D( wdata_i[(i%4)*8 +: 8] ), // input 
