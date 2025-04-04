@@ -1,3 +1,5 @@
+//This is a system v. version of the top module with pads.
+
 module pulpino_top_rtl_w_pads (
     input [13:0] INP,
     output [10:0] UTP,
