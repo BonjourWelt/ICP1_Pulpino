@@ -23,11 +23,11 @@ vlog -quiet -sv -work ${LIB_PATH} ${RTL_PATH}/components/rstgen.sv              
 vlog -quiet -sv -work ${LIB_PATH} ${RTL_PATH}/components/sp_ram.sv                  || goto error\
 vlog -quiet  -work ${LIB_PATH} ${RTL_PATH}/components/ST_SPHDL_2048x8m8_L.v                  || goto error ----add this line\
 
-vlog -quiet -sv -work ${LIB_PATH} +incdir+${RTL_PATH}/includes ${ASIC_DEFINES} ${CORE_DEFINES} ${RTL_PATH}/pulpino_top_pads.sv        || goto error\
+vlog -quiet -sv -work ${LIB_PATH} +incdir+${RTL_PATH}/includes ${ASIC_DEFINES} ${CORE_DEFINES} ${RTL_PATH}/**pulpino_top_pads**.sv        || goto error\
 
 ~/ICP1/etin35_project/pulpino/vsim/vcompile/rtl/vcompile_tb.sh\
-vlog -quiet -sv -work ${LIB_NAME} +incdir+${TB_PATH} +incdir+${RTL_PATH}/includes/                  ${TB_PATH}/tb_pads.sv               || goto error\
-vlog -quiet -sv -work ${LIB_NAME} +incdir+${TB_PATH} +incdir+${RTL_PATH}/includes/ -dpiheader ${TB_PATH}/mem_dpi/dpiheader.h    ${TB_PATH}/tb_pads.sv || goto error
+vlog -quiet -sv -work ${LIB_NAME} +incdir+${TB_PATH} +incdir+${RTL_PATH}/includes/                  ${TB_PATH}/**tb_pads**.sv               || goto error\
+vlog -quiet -sv -work ${LIB_NAME} +incdir+${TB_PATH} +incdir+${RTL_PATH}/includes/ -dpiheader ${TB_PATH}/mem_dpi/dpiheader.h    ${TB_PATH}/**tb_pads**.sv || goto error
 
 ----Modification for pads
 
