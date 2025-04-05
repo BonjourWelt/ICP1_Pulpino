@@ -53,10 +53,12 @@ These folders need to exist in the main project directory along side rtl.
 • Open terminal in main project folder
 
 • From there run genus and source the script:
+
         ./genus.sh
         Source GENUS/scripts/synt.tcl  
 
 To Do:
+
 • One of the RAM library files must be changed to the correct one. Currently it is set to the library file for ram belonging to matrix multiplier.
  
 • I’m not sure if the other library files are the same as the matrix multiplication or not but in either case I have kept all library files except for RAM the same. 
