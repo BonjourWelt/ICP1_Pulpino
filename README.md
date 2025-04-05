@@ -31,7 +31,7 @@ vlog -quiet -sv -work ${LIB_NAME} +incdir+${TB_PATH} +incdir+${RTL_PATH}/include
 
 ----Modification for pads
 
----------
+--------------------------
 
 # Simulation operations:
 ## 1. Add/Change signals in wave.do
@@ -41,9 +41,24 @@ change signals in wave.do:\
 //add wave -noupdate -radix hexadecimal {/tb/top_i/core_region_i/instr_mem/sp_ram_wrap_i/sp_ram_i} ---- for old wrapper\
 ~//ram_block[0]/u_sram/D ----- for new warpper
 
-------------
-
+--------------------------
 ## 2. Once a rtl file is changed, in modelsim:
 find in library using the binoculars -> recompile -> restart sim
 
 --------------------------
+Synthesis
+These folders need to exist in the main project directory along side rtl.
+	• Copy genus folder and genus.sh to main project folder
+	• Open terminal in main project folder
+	• From there run genus and source the script:
+        ./genus.sh
+        Source GENUS/scripts/synt.tcl  
+
+To Do:
+	• One of the RAM library files must be changed to the correct one. Currently it is set to the library file for ram belonging to matrix multiplier.
+	• I’m not sure if the other library files are the same as the matrix multiplication or not but in either case I have kept all library files except for RAM the same. 
+	• Also I have not changed the clock constraints and they are the same ones as for matrix multiplication. I am not sure if we have new constraints. 
+![image](https://github.com/user-attachments/assets/801a3d8c-4460-4db9-b50f-9242c498be53)
+
+
+
