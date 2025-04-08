@@ -1,6 +1,6 @@
 
 #ROOT will be the project directory and folder GENUS has to be there
-set ROOT "./"
+set ROOT "../"
 
 set SYNT_SCRIPT    "${ROOT}/GENUS/scripts"
 set SYNT_OUT       "${ROOT}/GENUS/outputs"
