@@ -50,7 +50,7 @@ Synthesis
 These folders need to exist in the main project directory along side rtl.
 • Copy genus folder and genus.sh to main project folder
 
-• Open terminal in main project folder
+• Open terminal in GENUS project folder
 
 • From there run genus and source the script:
 
