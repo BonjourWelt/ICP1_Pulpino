@@ -24,12 +24,12 @@ set_attribute init_hdl_search_path "$RTL $COMPONENTS $INCLUDES"
 # Technology library paths (library search path for RAM, pads, clock cells, etc.)
 # ------------------------------------------------------------------------------
 
-set_attribute init_lib_search_path {
-  /usr/local-eit/cad2/cmpstm/stm065v536/CORE65LPLVT_5.1/libs
-  /usr/local-eit/cad2/cmpstm/stm065v536/CLOCK65LPLVT_3.1/libs
-  Usr/local-eit/cad2/cpstm/oldmems/mem2010/SPHDL100909-40446@1.0/libs
-  /usr/local-eit/cad2/cmpstm/dicp18/lu_pads_65nm
-}
+set_attribute init_lib_search_path { \
+/usr/local-eit/cad2/cmpstm/stm065v536/CORE65LPLVT_5.1/libs \
+/usr/local-eit/cad2/cmpstm/stm065v536/CLOCK65LPLVT_3.1/libs \
+/usr/local-eit/cad2/cmpstm/oldmems/mem2010/SPHDL100909-40446@1.0/libs \
+/usr/local-eit/cad2/cmpstm/dicp18/lu_pads_65nm \
+} /
 # RAM for matrix_mult if needed
 # /usr/local-eit/cad2/cmpstm/oldmems/mem2011/SPHD110420-48158@1.0/libs
 
@@ -41,11 +41,9 @@ set_attribute init_lib_search_path {
 set_attribute library { \
 CLOCK65LPLVT_nom_1.20V_25C.lib \
 CORE65LPLVT_nom_1.20V_25C.lib \
-SPHD110420_nom_1.20V_25C.lib \
+SPHDL100909_nom_1.20V_25C.lib \
 Pads_Oct2012.lib} /
 
-# CHANGE:
-# RAM isnt the corrent
 
 # ------------------------------------------------------------------------------
 # RTL Source Files (SystemVerilog)
@@ -94,9 +92,9 @@ set DESIGN_FILES "
 # Synthesis Effort Settings
 # ------------------------------------------------------------------------------
 
-set SYN_EFF high
-set MAP_EFF high
-set OPT_EFF high
+set SYN_EFF medium
+set MAP_EFF medium
+set OPT_EFF medium
 
 set_attribute syn_generic_effort $SYN_EFF
 set_attribute syn_map_effort $MAP_EFF
