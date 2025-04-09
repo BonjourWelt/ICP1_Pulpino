@@ -1,0 +1,438 @@
+#######################################################
+#                                                     
+#  Innovus Command Logging File                     
+#  Created on Sat Apr  5 04:53:18 2025                
+#                                                     
+#######################################################
+
+#@(#)CDS: Innovus v16.13-s045_1 (64bit) 10/03/2016 04:28 (Linux 2.6.18-194.el5)
+#@(#)CDS: NanoRoute 16.13-s045_1 NR160923-1039/16_13-UB (database version 2.30, 351.6.1) {superthreading v1.30}
+#@(#)CDS: AAE 16.13-s013 (64bit) 10/03/2016 (Linux 2.6.18-194.el5)
+#@(#)CDS: CTE 16.13-s013_1 () Sep 28 2016 05:49:12 ( )
+#@(#)CDS: SYNTECH 16.13-s008_1 () Sep 15 2016 11:59:01 ( )
+#@(#)CDS: CPE v16.13-s039
+#@(#)CDS: IQRC/TQRC 15.2.5-s542 (64bit) Thu Aug 25 18:41:43 PDT 2016 (Linux 2.6.18-194.el5)
+
+#######################################################
+#                                                                         
+#   To-do: add save locations and divide this into many chunks so to not need to redo # everything   
+#   #restoreDesign /h/dc/s/mi7857mo-s/0_matrix_multi_new/full_design_save.dat matmul_top           
+#                                                     
+#######################################################
+
+set_global _enable_mmmc_by_default_flow      $CTE::mmmc_default
+suppressMessage ENCEXT-2799
+getDrawView
+loadWorkspace -name Physical
+win
+set_global _enable_mmmc_by_default_flow      $CTE::mmmc_default
+suppressMessage ENCEXT-2799
+getDrawView
+loadWorkspace -name Physical
+win
+set_global _enable_mmmc_by_default_flow      $CTE::mmmc_default
+suppressMessage ENCEXT-2799
+getDrawView
+loadWorkspace -name Physical
+win
+set_global _enable_mmmc_by_default_flow      $CTE::mmmc_default
+suppressMessage ENCEXT-2799
+getDrawView
+loadWorkspace -name Physical
+win
+set_global _enable_mmmc_by_default_flow      $CTE::mmmc_default
+suppressMessage ENCEXT-2799
+getDrawView
+loadWorkspace -name Physical
+win
+set ::TimeLib::tsgMarkCellLatchConstructFlag 1
+set conf_qxconf_file NULL
+set conf_qxlib_file NULL
+set defHierChar /
+set distributed_client_message_echo 1
+set distributed_mmmc_disable_reports_auto_redirection 0
+
+#######################################################
+#                                                                         
+#   here are the settings for design import               
+#                                                     
+#######################################################                                              
+set init_gnd_net GND
+set init_pwr_net VDD
+set latch_time_borrow_mode max_borrow
+set pegDefaultResScaleFactor 1
+set pegDetailResScaleFactor 1
+set report_inactive_arcs_format {from to when arc_type sense reason}
+set report_inactive_arcs_format {from to when arc_type sense reason}
+set tso_post_client_restore_command {update_timing ; write_eco_opt_db ;}
+
+#######################################################
+#                                                                         
+#   define: corners, pad positions, synthesized netlist, library files            
+#                                                     
+#######################################################   
+
+#---------mmmc file: corner settings if already saved
+#---------inside this there is also a path to SDC file that must be set
+set init_mmmc_file innovus/mmmc_settings.view
+
+#----------------------- top file netlist
+set init_verilog GENUS/outputs/matmul_top.v
+
+#----------------------- io pad list
+set init_io_file iopads/matmul_top_w_pads.io
+
+#----------------------- library files 
+set init_lef_file {/usr/local-eit/cad2/cmpstm/stm065v536/EncounterTechnoKit_cmos065_7m4x0y2z_AP@5.3.1/TECH/cmos065_7m4x0y2z_AP_Worst.lef /usr/local-eit/cad2/cmpstm/stm065v536/CORE65LPLVT_5.1/CADENCE/LEF/CORE65LPLVT_soc.lef /usr/local-eit/cad2/cmpstm/stm065v536/CLOCK65LPLVT_3.1/CADENCE/LEF/CLOCK65LPLVT_soc.lef /usr/local-eit/cad2/cmpstm/stm065v536/PRHS65_7.0.a/CADENCE/LEF/PRHS65_soc.lef /usr/local-eit/cad2/cmpstm/oldmems/mem2011/SPHD110420-48158@1.0/CADENCE/LEF/SPHD110420_soc.lef /usr/local-eit/cad2/cmpstm/dicp18/lu_pads_65nm/PADS_Jun2013.lef}
+
+
+init_design
+
+saveDesign full_design_save
+
+#######################################################
+#                                                                         
+#   placement              
+#                                                     
+#######################################################   
+
+#-----------------choose the deminsions of die
+floorPlan -site CORE -s 471 411 20 20 20 20
+
+# set to this to be able to view placed components
+setDrawView fplan
+
+#--------selects move tool
+uiSetTool move
+
+#-----------coordinates of bottom left corner of ram
+setObjFPlanBox Instance matmul/RAM_controller_1/RAM_component/DUT_ST_SPHDL_160x32_mem2011 95.5 95.5 400.3 136.5
+
+#-----------invert ram 180 degrees
+placeInstance matmul/RAM_controller_1/RAM_component/DUT_ST_SPHDL_160x32_mem2011 95.5 95.5 R180
+
+uiSetTool select
+fit
+
+#----------add halo with 10um from all sides
+addHaloToBlock {2 2 2 2} -allBlock
+
+#----------first select RAM then cut rows underneath it
+selectInst matmul/RAM_controller_1/RAM_component/DUT_ST_SPHDL_160x32_mem2011
+cutRow -selected
+
+saveDesign full_design_save
+
+#######################################################
+#                                                                         
+#   place 2            
+#                                                     
+#######################################################   
+
+#---------------add VDD and GND supplies and pins
+clearGlobalNets
+globalNetConnect VDD -type tiehi -inst *
+globalNetConnect GND -type tielo -inst *
+globalNetConnect VDD -type pgpin -pin vdd -inst *
+globalNetConnect GND -type pgpin -pin gnd -inst *
+#-----------not sure why we added these (guide says to add because of LU_PADS)
+globalNetConnect VDD -type pgpin -pin VDDC -inst *
+globalNetConnect GND -type pgpin -pin GNDC -inst *
+
+#--------add rings 
+#--------what we chose: M3, M3 for horizontal, M4,M4 for vertical 
+#--------w:2,spacing:2, Offset:2
+#--------Power supplies: VDD, GND
+#---as soon as you open menu this opens, doesnt matter
+set sprCreateIeRingNets {}
+set sprCreateIeRingLayers {}
+set sprCreateIeRingWidth 1.0
+set sprCreateIeRingSpacing 1.0
+set sprCreateIeRingOffset 1.0
+set sprCreateIeRingThreshold 1.0
+set sprCreateIeRingJogDistance 1.0
+#---------Core ring
+addRing -skip_via_on_wire_shape Noshape -skip_via_on_pin Standardcell -stacked_via_top_layer AP -type core_rings -jog_distance 0.4 -threshold 0.4 -nets {GND VDD} -follow core -stacked_via_bottom_layer M1 -layer {bottom M3 top M3 right M4 left M4} -width 2 -spacing 2 -offset 2
+editPushUndo
+
+#--------select Mem
+deselectAll
+selectInst matmul/RAM_controller_1/RAM_component/DUT_ST_SPHDL_160x32_mem2011
+#--------Mem Ring (only 2 corners since the other two overlap with core anyway)
+addRing -skip_via_on_wire_shape Noshape -skip_via_on_pin Standardcell -stacked_via_top_layer AP -around selected -jog_distance 0.4 -threshold 0.4 -type block_rings -nets {GND VDD} -follow core -stacked_via_bottom_layer M1 -layer {bottom M3 top M3 right M4 left M4} -width 2 -spacing 2 -offset 2 -skip_side {left bottom}
+
+#-------if wrong delete and redo
+# deleteAllPowerPreroutes
+
+#--------------------add strips M4:v , M3:H, 2, 2
+#---- M4:V, 2 2
+addStripe -skip_via_on_wire_shape Noshape -block_ring_top_layer_limit M1 -max_same_layer_jog_length 6 -padcore_ring_bottom_layer_limit M1 -set_to_set_distance 100 -skip_via_on_pin Standardcell -stacked_via_top_layer AP -padcore_ring_top_layer_limit M1 -spacing 2 -merge_stripes_value 2.5 -layer M4 -block_ring_bottom_layer_limit M1 -stop_x 0 -stop_y 0 -width 2 -area {} -nets {GND VDD} -start_x 0 -stacked_via_bottom_layer M1 -start_y 0
+editPushUndo
+#---- M3:H, 2 2
+addStripe -skip_via_on_wire_shape Noshape -block_ring_top_layer_limit M1 -max_same_layer_jog_length 6 -padcore_ring_bottom_layer_limit M1 -set_to_set_distance 100 -skip_via_on_pin Standardcell -stacked_via_top_layer AP -padcore_ring_top_layer_limit M1 -spacing 2 -merge_stripes_value 2.5 -direction horizontal -layer M3 -block_ring_bottom_layer_limit M1 -stop_x 0 -stop_y 0 -width 2 -area {} -nets {GND VDD} -start_x 0 -stacked_via_bottom_layer M1 -start_y 0
+editPushUndo
+
+#------- add well_tap
+addWellTap -cell HS65_LS_FILLERSNPWPFP4 -cellInterval 25 -prefix WELLTAP
+
+
+#--------- Place Blockage
+setPlaceMode -prerouteAsObs {1 2 3 4 5 6 7 8}
+fit
+
+#------- place standard cells then physical view to see cells
+setPlaceMode -fp false
+placeDesign
+setDrawView place
+fit
+
+#--------- hide wires to see cells
+setLayerPreference net -isVisible 0
+setLayerPreference power -isVisible 0
+setLayerPreference pgPower -isVisible 0
+setLayerPreference pgGround -isVisible 0
+setLayerPreference shield -isVisible 0
+setLayerPreference unknowState -isVisible 0
+setLayerPreference metalFill -isVisible 0
+setLayerPreference clock -isVisible 0
+setLayerPreference whatIfShape -isVisible 0
+
+saveDesign full_design_save
+
+#######################################################
+#                                                                         
+#   Optimization round 1: Pre-Clock-Tree Synthesis             
+#                                                     
+####################################################### 
+
+#-------Timing report: Setup,report directory: innovus naming: timing_preCTS
+redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
+timeDesign -preCTS -idealClock -pathReports -drvReports -slackReports -numPaths 50 -prefix timing_preCTS -outDir innovus/reports/pre_clk
+
+#-------Timing report: Hold
+redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
+timeDesign -preCTS -hold -idealClock -pathReports -slackReports -numPaths 50 -prefix timing_preCTS -outDir innovus/reports/pre_clk
+
+#-------Opt: setup, no cap, no tran
+setOptMode -fixCap false -fixTran false -fixFanoutLoad false
+optDesign -preCTS
+
+#-------Opt: setup, +cap, +tran
+setOptMode -fixCap true -fixTran true -fixFanoutLoad false
+optDesign -preCTS
+
+#-------Opt: setup, +max fanout
+setOptMode -fixCap false -fixTran false -fixFanoutLoad true
+optDesign -preCTS
+
+saveDesign full_design_save
+
+#######################################################
+#                                                                         
+#   Clock-Tree Synthesis             
+#                                                     
+#######################################################  
+
+#-----add clock-tree files: inverters, buffers and hold-fix cells
+
+setOptMode -holdFixingCells { HS65_LL_BFX106 HS65_LL_BFX13 HS65_LL_BFX142 HS65_LL_BFX18 HS65_LL_BFX2 HS65_LL_BFX213 HS65_LL_BFX22 HS65_LL_BFX27 HS65_LL_BFX284 HS65_LL_BFX31 HS65_LL_BFX35 HS65_LL_BFX4 HS65_LL_BFX40 HS65_LL_BFX44 HS65_LL_BFX49 HS65_LL_BFX53 HS65_LL_BFX62 HS65_LL_BFX7 HS65_LL_BFX71 HS65_LL_BFX9 HS65_LL_BFX106 HS65_LL_BFX13 HS65_LL_BFX142 HS65_LL_BFX18 HS65_LL_BFX2 HS65_LL_BFX213 HS65_LL_BFX22 HS65_LL_BFX27 HS65_LL_BFX284 HS65_LL_BFX31 HS65_LL_BFX35 HS65_LL_BFX4 HS65_LL_BFX40 HS65_LL_BFX44 HS65_LL_BFX49 HS65_LL_BFX53 HS65_LL_BFX62 HS65_LL_BFX7 HS65_LL_BFX71 HS65_LL_BFX9 HS65_LL_BFX106 HS65_LL_BFX13 HS65_LL_BFX142 HS65_LL_BFX18 HS65_LL_BFX2 HS65_LL_BFX213 HS65_LL_BFX22 HS65_LL_BFX27 HS65_LL_BFX284 HS65_LL_BFX31 HS65_LL_BFX35 HS65_LL_BFX4 HS65_LL_BFX40 HS65_LL_BFX44 HS65_LL_BFX49 HS65_LL_BFX53 HS65_LL_BFX62 HS65_LL_BFX7 HS65_LL_BFX71 HS65_LL_BFX9 HS65_LL_BFX106 HS65_LL_BFX13 HS65_LL_BFX142 HS65_LL_BFX18 HS65_LL_BFX2 HS65_LL_BFX213 HS65_LL_BFX22 HS65_LL_BFX27 HS65_LL_BFX284 HS65_LL_BFX31 HS65_LL_BFX35 HS65_LL_BFX4 HS65_LL_BFX40 HS65_LL_BFX44 HS65_LL_BFX49 HS65_LL_BFX53 HS65_LL_BFX62 HS65_LL_BFX7 HS65_LL_BFX71 HS65_LL_BFX9  }
+fit
+
+set_ccopt_property inverter_cells { HS65_LL_CNIVX10 HS65_LL_CNIVX103 HS65_LL_CNIVX124 HS65_LL_CNIVX14 HS65_LL_CNIVX17 HS65_LL_CNIVX21 HS65_LL_CNIVX24 HS65_LL_CNIVX27 HS65_LL_CNIVX3 HS65_LL_CNIVX31 HS65_LL_CNIVX34 HS65_LL_CNIVX38 HS65_LL_CNIVX41 HS65_LL_CNIVX45 HS65_LL_CNIVX48 HS65_LL_CNIVX52 HS65_LL_CNIVX55 HS65_LL_CNIVX58 HS65_LL_CNIVX62 HS65_LL_CNIVX7 HS65_LL_CNIVX82}
+fit
+
+set_ccopt_property buffer_cells {HS65_LL_CNBFX10 HS65_LL_CNBFX103 HS65_LL_CNBFX124 HS65_LL_CNBFX14 HS65_LL_CNBFX17 HS65_LL_CNBFX21 HS65_LL_CNBFX24 HS65_LL_CNBFX27 HS65_LL_CNBFX31 HS65_LL_CNBFX34 HS65_LL_CNBFX38 HS65_LL_CNBFX41 HS65_LL_CNBFX45 HS65_LL_CNBFX48 HS65_LL_CNBFX52 HS65_LL_CNBFX55 HS65_LL_CNBFX58 HS65_LL_CNBFX62 HS65_LL_CNBFX82 }
+fit
+
+#------now that the library files have been added synthesize the tree
+#---the actual commands where these:
+#---create_ccopt_clock_tree_spec -file ./ccopt.spec
+#---source ./ccopt.spec
+#---ccopt_design
+###########
+create_ccopt_clock_tree_spec -file ./ccopt.spec
+ccopt_check_and_flatten_ilms_no_restore
+create_ccopt_clock_tree -name clk_in -source clk_in -no_skew_group
+set_ccopt_property target_max_trans_sdc -delay_corner SS -late -clock_tree clk_in 0.200
+set_ccopt_property source_latency -delay_corner SS -late -rise -clock_tree clk_in 0.500
+set_ccopt_property source_latency -delay_corner SS -late -fall -clock_tree clk_in 0.500
+set_ccopt_property source_latency -delay_corner FF -late -rise -clock_tree clk_in 0.500
+set_ccopt_property source_latency -delay_corner FF -late -fall -clock_tree clk_in 0.500
+set_ccopt_property clock_period -pin clk_in 10
+create_ccopt_skew_group -name clk_in/Clock_Constraint -sources clk_in -auto_sinks
+set_ccopt_property include_source_latency -skew_group clk_in/Clock_Constraint true
+set_ccopt_property extracted_from_clock_name -skew_group clk_in/Clock_Constraint clk_in
+set_ccopt_property extracted_from_constraint_mode_name -skew_group clk_in/Clock_Constraint Clock_Constraint
+set_ccopt_property extracted_from_delay_corners -skew_group clk_in/Clock_Constraint {SS FF}
+check_ccopt_clock_tree_convergence
+get_ccopt_property auto_design_state_for_ilms
+ccopt_design
+fit
+
+saveDesign full_design_save
+
+#######################################################
+#                                                                         
+#   Optimization round 2: Post-Clock-Tree Synthesis             
+#                                                     
+#######################################################  
+
+#----Timing reports
+#---setup
+redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
+timeDesign -postCTS -pathReports -drvReports -slackReports -numPaths 50 -prefix timing_postCTS -outDir innovus/reports/post_clk
+
+#---hold
+redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
+timeDesign -postCTS -hold -pathReports -slackReports -numPaths 50 -prefix timing_postCTS -outDir innovus/reports/post_clk
+
+#------there was hold violation 
+setOptMode -fixCap true -fixTran true -fixFanoutLoad false
+optDesign -postCTS -hold
+
+#------delete trial clock routes?
+deleteTrialRoute
+
+#######################################################
+#                                                                         
+#   IO_Filler placement             
+#                                                     
+#######################################################  
+
+#----- to change spacing between IO pads use this: they will shift towards left
+# spaceIoInst -fixSide left -space 2
+
+#----IO filler names: PADSPACE_C_74x48u_CH_Rot, PADSPACE_74x<16,8,6,4,2,1>u, PADGND_74x50uNOTRIG
+#---- top and bottom
+addIoFiller -cell PADSPACE_74x16u -prefix IO_FILLER -side n
+addIoFiller -cell PADSPACE_74x4u -prefix IO_FILLER -side n
+addIoFiller -cell PADSPACE_74x16u -prefix IO_FILLER -side s
+addIoFiller -cell PADSPACE_74x4u -prefix IO_FILLER -side s
+#----left
+addIoFiller -cell PADSPACE_74x16u -prefix IO_FILLER -side w
+addIoFiller -cell PADSPACE_74x8u -prefix IO_FILLER -side w
+addIoFiller -cell PADSPACE_74x6u -prefix IO_FILLER -side w
+addIoFiller -cell PADSPACE_74x4u -prefix IO_FILLER -side w
+addIoFiller -cell PADSPACE_74x2u -prefix IO_FILLER -side w
+addIoFiller -cell PADSPACE_74x1u -prefix IO_FILLER -side w
+#----right
+addIoFiller -cell PADSPACE_74x16u -prefix IO_FILLER -side e
+addIoFiller -cell PADSPACE_74x8u -prefix IO_FILLER -side e
+addIoFiller -cell PADSPACE_74x6u -prefix IO_FILLER -side e
+addIoFiller -cell PADSPACE_74x4u -prefix IO_FILLER -side e
+addIoFiller -cell PADSPACE_74x2u -prefix IO_FILLER -side e
+addIoFiller -cell PADSPACE_74x1u -prefix IO_FILLER -side e
+
+saveDesign full_design_save
+
+#######################################################
+#                                                                         
+#   Route              
+#                                                     
+#######################################################  
+
+#------Special route (unselect pad rings)
+sroute -connect { blockPin padPin corePin floatingStripe } -layerChangeRange { M1(1) AP(8) } -blockPinTarget { nearestTarget } -padPinPortConnect { allPort oneGeom } -padPinTarget { nearestTarget } -corePinTarget { firstAfterRowEnd } -floatingStripeTarget { blockring padring ring stripe ringpin blockpin followpin } -allowJogging 1 -crossoverViaLayerRange { M1(1) AP(8) } -nets { GND VDD } -allowLayerChange 1 -blockPin useLef -targetViaLayerRange { M1(1) AP(8) }
+
+#------nano route
+setNanoRouteMode -quiet -timingEngine {}
+setNanoRouteMode -quiet -routeWithSiPostRouteFix 0
+setNanoRouteMode -quiet -drouteStartIteration default
+setNanoRouteMode -quiet -routeTopRoutingLayer default
+setNanoRouteMode -quiet -routeBottomRoutingLayer default
+setNanoRouteMode -quiet -drouteEndIteration default
+setNanoRouteMode -quiet -routeWithTimingDriven false
+setNanoRouteMode -quiet -routeWithSiDriven false
+routeDesign -globalDetail
+
+#######################################################
+#                                                                         
+#   Optimization round 3: Post-Route              
+#                                                     
+#######################################################  
+
+#-----timing reports
+#--ERROR by innovus forcing me to do next line before post_r timing report is generated
+setAnalysisMode -analysisType onChipVariation
+
+#---setup
+redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
+timeDesign -postRoute -pathReports -slackReports -numPaths 50 -prefix matmul_top_postRoute -outDir innovus/reports/post_r
+
+#---Hold
+redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
+timeDesign -postRoute -hold -pathReports -slackReports -numPaths 50 -prefix matmul_top_postRoute -outDir innovus/reports/post_r
+
+#---fix setup
+setOptMode -fixCap false -fixTran false -fixFanoutLoad false
+optDesign -postRoute -incr
+setOptMode -fixCap true -fixTran true -fixFanoutLoad false
+optDesign -postRoute
+
+#---fixed setup now hold timing report
+redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
+timeDesign -postRoute -hold -pathReports -slackReports -numPaths 50 -prefix matmul_top_postRoute -outDir timingReports
+
+#---fix hold
+setOptMode -fixCap false -fixTran false -fixFanoutLoad false
+optDesign -postRoute -hold -incr
+setOptMode -fixCap false -fixTran false -fixFanoutLoad false
+optDesign -postRoute -hold -incr
+setOptMode -fixCap false -fixTran false -fixFanoutLoad false
+optDesign -postRoute -hold -incr
+
+%---Fix setup + DRC : (wont do anything in hold mode)
+setOptMode -fixCap true -fixTran true -fixFanoutLoad false
+optDesign -postRoute
+
+#--- ruined hold so again
+setOptMode -fixCap false -fixTran false -fixFanoutLoad false
+optDesign -postRoute -hold -incr
+setOptMode -fixCap false -fixTran false -fixFanoutLoad false
+optDesign -postRoute -hold -incr
+
+#-- DONE
+
+#-- Generate reports
+redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
+timeDesign -postRoute -pathReports -slackReports -numPaths 50 -prefix matmul_top_postRoute -outDir innovus/reports/post_r
+redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
+timeDesign -postRoute -hold -pathReports -slackReports -numPaths 50 -prefix matmul_top_postRoute -outDir innovus/reports/post_r
+
+saveDesign full_design_save
+
+#######################################################
+#                                                                         
+#   Filler placement             
+#                                                     
+####################################################### 
+
+#--------Core Filler (wont allow optimization anymore as nothing can move)
+#--------Added in order of decreasing size
+getFillerMode -quiet
+addFiller -cell HS65_LL_FILLERPFOP64 -prefix FILLER -doDRC -markFixed
+addFiller -cell HS65_LL_FILLERPFOP32 -prefix FILLER -doDRC -markFixed
+addFiller -cell HS65_LL_FILLERPFOP16 -prefix FILLER -doDRC -markFixed
+addFiller -cell HS65_LL_FILLERPFOP12 -prefix FILLER -doDRC -markFixed
+addFiller -cell HS65_LL_FILLERPFOP9 -prefix FILLER -doDRC -markFixed
+addFiller -cell HS65_LL_FILLERPFOP8 -prefix FILLER -doDRC -markFixed
+addFiller -cell HS65_LL_FILLERPFP4 -prefix FILLER -doDRC -markFixed
+addFiller -cell HS65_LL_FILLERPFP3 -prefix FILLER -doDRC -markFixed
+addFiller -cell HS65_LL_FILLERPFP2 -prefix FILLER -doDRC -markFixed
+addFiller -cell HS65_LL_FILLERPFP1 -prefix FILLER -doDRC -markFixed
+addFiller -cell HS65_LL_FILLERPFP1 -prefix FILLER -doDRC -markFixed
+
+#######################################################
+#                                                                         
+#   Sign-off and SDF generation        
+#                                                     
+####################################################### 
+
+#---- Generate SDF according to RAM guide not by the tools own function
+write_sdf -version 3.0 innovus/Netlist_SDF/matMult_post_pnr.sdf -map_file /usr/local-eit/cad2/cmpstm/oldmems/mem2011/SPHD110420-48158@1.0/behaviour/verilog/SPHD110420.verilog.map -precision 4 -min_view FF -max_view SS
+
+#---- Create The Final Netlist
+saveNetlist innovus/Netlist_SDF/matmul_top.v
+
+#---- Go home and sleep
+saveDesign full_design_save
