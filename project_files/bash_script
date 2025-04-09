@@ -1,6 +1,12 @@
 #!/bin/bash
 
-# Always ensure ./build exists
+# Check if ./build is a file instead of a directory
+if [ -f "./build" ]; then
+    echo "Error: A file named 'build' exists. Please remove or rename it."
+    exit 1
+fi
+
+# Always ensure ./build exists as a directory
 mkdir -p "./build"
 
 # Base paths
@@ -44,17 +50,17 @@ if [ "$1" == "mkdirs" ]; then
     exit 0
 fi
 
-# Usage
+# Usage message
 usage() {
     echo "Usage:"
-    echo "  ./run_script new               - Use new_rtl, new_tb, new_vsim_compile"
-    echo "  ./run_script old               - Use confirmed_rtl, confirmed_tb, confirmed_vsim_compile"
+    echo "  ./run_script commit            - Copy files from new_* folders"
+    echo "  ./run_script revert            - Copy files from confirmed_* folders"
     echo "  ./run_script mkdirs            - Create all required source directories only"
     echo "  ./run_script build <project>   - Configure and build specified project"
     exit 1
 }
 
-# Handle build argument
+# Handle build <project>
 if [ "$1" == "build" ]; then
     if [ -z "$2" ]; then
         echo "Usage: ./run_script build <project_name>"
@@ -89,18 +95,18 @@ if [ "$1" == "build" ]; then
     exit 0
 fi
 
-# Handle new/old copy
+# Handle commit/revert
 if [ "$#" -ne 1 ]; then usage; fi
 
 case "$1" in
-    new)
+    commit)
         SOURCE_RTL="$WORKBENCH/new_rtl"
         SOURCE_COMPONENTS="$WORKBENCH/new_rtl/components"
         SOURCE_TB="$WORKBENCH/new_tb"
         SOURCE_VCOMPILE="$WORKBENCH/new_vsim_compile/vcompile_pulpino.sh"
         VSIM_BASE_SOURCE="$CONFIRMED/original_vsim"
         ;;
-    old)
+    revert)
         SOURCE_RTL="$CONFIRMED/confirmed_rtl"
         SOURCE_COMPONENTS="$CONFIRMED/confirmed_rtl/components"
         SOURCE_TB="$CONFIRMED/confirmed_tb"
@@ -112,7 +118,7 @@ case "$1" in
         ;;
 esac
 
-# Check and create missing source dirs (abort operations if any are missing)
+# Create missing source dirs (if any) and abort further operations
 SKIP_OPERATIONS=0
 for dir in "$SOURCE_RTL" "$SOURCE_TB" "$SOURCE_COMPONENTS" "$VSIM_BASE_SOURCE" "$(dirname "$SOURCE_VCOMPILE")"; do
     if [ ! -d "$dir" ]; then
@@ -131,14 +137,14 @@ if [ "$SKIP_OPERATIONS" -eq 1 ]; then
     exit 0
 fi
 
-# Check vcompile script
+# Check for vcompile script
 if [ ! -f "$SOURCE_VCOMPILE" ]; then
     SKIP_VCOMPILE=1
 else
     SKIP_VCOMPILE=0
 fi
 
-# VSIM clean and setup
+# Reset vsim
 rm -rf "$VSIM_TARGET"/*
 mkdir -p "$VSIM_TARGET"
 cp -r "$VSIM_BASE_SOURCE"/* "$VSIM_TARGET"/ && echo "VSIM setup updated." || echo "Failed to update VSIM."
@@ -153,7 +159,14 @@ fi
 
 # Copy RTL files
 if [ "$(ls -A "$SOURCE_RTL")" ]; then
-    cp -vf "$SOURCE_RTL"/* "$DEST_DIR_RTL"/ && echo "RTL files copied." || echo "Failed to copy RTL files."
+    for file in "$SOURCE_RTL"/*; do
+        filename=$(basename "$file")
+        if cp -f "$file" "$DEST_DIR_RTL"/; then
+            echo "$filename copied"
+        else
+            echo "failed to copy $filename"
+        fi
+    done
 else
     echo "No RTL files found. Skipped."
 fi
@@ -161,14 +174,28 @@ fi
 # Copy Components
 mkdir -p "$DEST_DIR_COMPONENTS"
 if [ "$(ls -A "$SOURCE_COMPONENTS")" ]; then
-    cp -vf "$SOURCE_COMPONENTS"/* "$DEST_DIR_COMPONENTS"/ && echo "Components copied." || echo "Failed to copy components."
+    for file in "$SOURCE_COMPONENTS"/*; do
+        filename=$(basename "$file")
+        if cp -f "$file" "$DEST_DIR_COMPONENTS"/; then
+            echo "$filename copied"
+        else
+            echo "failed to copy $filename"
+        fi
+    done
 else
     echo "No component files found. Skipped."
 fi
 
 # Copy TB files
 if [ "$(ls -A "$SOURCE_TB")" ]; then
-    cp -vf "$SOURCE_TB"/* "$DEST_DIR_TB"/ && echo "Testbench files copied." || echo "Failed to copy testbench files."
+    for file in "$SOURCE_TB"/*; do
+        filename=$(basename "$file")
+        if cp -f "$file" "$DEST_DIR_TB"/; then
+            echo "$filename copied"
+        else
+            echo "failed to copy $filename"
+        fi
+    done
 else
     echo "No testbench files found. Skipped."
 fi
