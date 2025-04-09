@@ -1,0 +1,67 @@
+#!/bin/bash
+
+# Base paths
+DEST_DIR_RTL="../rtl"
+BACKUP_BASE="./backups"
+VSIM_TARGET="../vsim"
+VSIM_SOURCE="$BACKUP_BASE/vsim"
+LIST_FILE_SOURCE="$BACKUP_BASE/list.txt"
+LIST_FILE_DEST="$VSIM_TARGET/vcomile"
+
+# Show usage
+usage() {
+    echo "Usage: ./run_script [new|old]"
+    echo "  new: Copy files from backups/new_files into ../rtl"
+    echo "  old: Copy files from backups/old_files into ../rtl"
+    exit 1
+}
+
+# Check input
+if [ "$#" -ne 1 ]; then
+    usage
+fi
+
+case "$1" in
+    new)
+        SOURCE_DIR="$BACKUP_BASE/new_files"
+        ;;
+    old)
+        SOURCE_DIR="$BACKUP_BASE/old_files"
+        ;;
+    *)
+        echo "Error: Unknown option '$1'"
+        usage
+        ;;
+esac
+
+# Validate all required directories
+if [ ! -d "$SOURCE_DIR" ]; then
+    echo "Error: Source directory '$SOURCE_DIR' does not exist."
+    exit 1
+fi
+
+if [ ! -d "$DEST_DIR_RTL" ]; then
+    echo "Error: Destination directory '$DEST_DIR_RTL' does not exist."
+    exit 1
+fi
+
+if [ ! -d "$VSIM_SOURCE" ]; then
+    echo "Error: VSIM source directory '$VSIM_SOURCE' does not exist."
+    exit 1
+fi
+
+# --- STEP 1: Clean and update pulpino/vsim ---
+echo "Cleaning '$VSIM_TARGET/'..."
+rm -rf "$VSIM_TARGET"/*
+
+echo "Copying VSIM setup files from '$VSIM_SOURCE/' to '$VSIM_TARGET/'..."
+cp -rv "$VSIM_SOURCE"/* "$VSIM_TARGET"/
+
+echo "Copying list.txt to '$LIST_FILE_DEST'..."
+cp -v "$LIST_FILE_SOURCE" "$LIST_FILE_DEST"
+
+# --- STEP 2: Swap RTL files ---
+echo "Swapping files from '$SOURCE_DIR/' into '$DEST_DIR_RTL/' (overwriting existing files)..."
+cp -vf "$SOURCE_DIR"/* "$DEST_DIR_RTL"/
+
+echo "All operations completed successfully."
