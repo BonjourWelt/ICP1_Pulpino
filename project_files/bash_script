@@ -1,67 +1,176 @@
 #!/bin/bash
 
-# Base paths
-DEST_DIR_RTL="../rtl"
-BACKUP_BASE="./backups"
-VSIM_TARGET="../vsim"
-VSIM_SOURCE="$BACKUP_BASE/vsim"
-LIST_FILE_SOURCE="$BACKUP_BASE/list.txt"
-LIST_FILE_DEST="$VSIM_TARGET/vcomile"
+# Always ensure ./build exists
+mkdir -p "./build"
 
-# Show usage
+# Base paths
+WORKBENCH="./workbench"
+CONFIRMED="$WORKBENCH/confirmed"
+VSIM_TARGET="../vsim"
+VSIM_VCOMPILE_DEST="$VSIM_TARGET/vcompile/rtl"
+DEST_DIR_RTL="../rtl"
+DEST_DIR_TB="../tb"
+DEST_DIR_COMPONENTS="$DEST_DIR_RTL/components"
+
+# Required source dirs for mkdirs
+REQUIRED_DIRS=(
+    "$WORKBENCH/new_rtl"
+    "$WORKBENCH/new_tb"
+    "$WORKBENCH/new_vsim_compile"
+    "$CONFIRMED/confirmed_rtl"
+    "$CONFIRMED/confirmed_tb"
+    "$CONFIRMED/confirmed_vsim_compile"
+    "$CONFIRMED/original_vsim"
+)
+
+# Handle mkdirs
+if [ "$1" == "mkdirs" ]; then
+    CREATED=0
+    for dir in "${REQUIRED_DIRS[@]}"; do
+        if [ ! -d "$dir" ]; then
+            mkdir -p "$dir"
+            echo "Created: $dir"
+            CREATED=1
+        fi
+    done
+    mkdir -p "$WORKBENCH/new_rtl/components"
+    mkdir -p "$CONFIRMED/confirmed_rtl/components"
+
+    if [ "$CREATED" -eq 0 ]; then
+        echo "All source directories already exist."
+    else
+        echo "Source directory setup complete (including components/)."
+    fi
+    exit 0
+fi
+
+# Usage
 usage() {
-    echo "Usage: ./run_script [new|old]"
-    echo "  new: Copy files from backups/new_files into ../rtl"
-    echo "  old: Copy files from backups/old_files into ../rtl"
+    echo "Usage:"
+    echo "  ./run_script new               - Use new_rtl, new_tb, new_vsim_compile"
+    echo "  ./run_script old               - Use confirmed_rtl, confirmed_tb, confirmed_vsim_compile"
+    echo "  ./run_script mkdirs            - Create all required source directories only"
+    echo "  ./run_script build <project>   - Configure and build specified project"
     exit 1
 }
 
-# Check input
-if [ "$#" -ne 1 ]; then
-    usage
+# Handle build argument
+if [ "$1" == "build" ]; then
+    if [ -z "$2" ]; then
+        echo "Usage: ./run_script build <project_name>"
+        exit 1
+    fi
+
+    PROJECT_NAME="$2"
+
+    if [ ! -f setup2022.efd ]; then
+        echo "Error: setup2022.efd not found in pulpino/sw/"
+        exit 1
+    fi
+
+    if [ ! -f cmake_configure.riscv.gcc.sh ]; then
+        echo "Error: cmake_configure.riscv.gcc.sh not found in pulpino/sw/"
+        exit 1
+    fi
+
+    make clean
+    cd .. || exit 1
+    cp sw/setup2022.efd build/ || { echo "Failed to copy setup2022.efd"; exit 1; }
+    cp sw/cmake_configure.riscv.gcc.sh build/ || { echo "Failed to copy cmake_configure script"; exit 1; }
+    cd build || exit 1
+
+    source setup2022.efd || { echo "Failed to source setup2022.efd"; exit 1; }
+    source cmake_configure.riscv.gcc.sh || { echo "Failed to source cmake_configure.riscv.gcc.sh"; exit 1; }
+
+    make "${PROJECT_NAME}.read" && echo "${PROJECT_NAME}.read completed." || echo "make ${PROJECT_NAME}.read failed."
+    make vcompile && echo "vcompile completed." || echo "make vcompile failed."
+    make "${PROJECT_NAME}.vsimc" && echo "${PROJECT_NAME}.vsimc completed." || echo "make ${PROJECT_NAME}.vsimc failed."
+
+    exit 0
 fi
+
+# Handle new/old copy
+if [ "$#" -ne 1 ]; then usage; fi
 
 case "$1" in
     new)
-        SOURCE_DIR="$BACKUP_BASE/new_files"
+        SOURCE_RTL="$WORKBENCH/new_rtl"
+        SOURCE_COMPONENTS="$WORKBENCH/new_rtl/components"
+        SOURCE_TB="$WORKBENCH/new_tb"
+        SOURCE_VCOMPILE="$WORKBENCH/new_vsim_compile/vcompile_pulpino.sh"
+        VSIM_BASE_SOURCE="$CONFIRMED/original_vsim"
         ;;
     old)
-        SOURCE_DIR="$BACKUP_BASE/old_files"
+        SOURCE_RTL="$CONFIRMED/confirmed_rtl"
+        SOURCE_COMPONENTS="$CONFIRMED/confirmed_rtl/components"
+        SOURCE_TB="$CONFIRMED/confirmed_tb"
+        SOURCE_VCOMPILE="$CONFIRMED/confirmed_vsim_compile/vcompile_pulpino.sh"
+        VSIM_BASE_SOURCE="$CONFIRMED/original_vsim"
         ;;
     *)
-        echo "Error: Unknown option '$1'"
         usage
         ;;
 esac
 
-# Validate all required directories
-if [ ! -d "$SOURCE_DIR" ]; then
-    echo "Error: Source directory '$SOURCE_DIR' does not exist."
-    exit 1
+# Check and create missing source dirs (abort operations if any are missing)
+SKIP_OPERATIONS=0
+for dir in "$SOURCE_RTL" "$SOURCE_TB" "$SOURCE_COMPONENTS" "$VSIM_BASE_SOURCE" "$(dirname "$SOURCE_VCOMPILE")"; do
+    if [ ! -d "$dir" ]; then
+        mkdir -p "$dir"
+        echo "Created: $dir"
+        SKIP_OPERATIONS=1
+    fi
+done
+
+mkdir -p "$WORKBENCH/new_rtl/components"
+mkdir -p "$CONFIRMED/confirmed_rtl/components"
+
+if [ "$SKIP_OPERATIONS" -eq 1 ]; then
+    echo "One or more source directories were missing and have been created."
+    echo "No operations will be performed in this run."
+    exit 0
 fi
 
-if [ ! -d "$DEST_DIR_RTL" ]; then
-    echo "Error: Destination directory '$DEST_DIR_RTL' does not exist."
-    exit 1
+# Check vcompile script
+if [ ! -f "$SOURCE_VCOMPILE" ]; then
+    SKIP_VCOMPILE=1
+else
+    SKIP_VCOMPILE=0
 fi
 
-if [ ! -d "$VSIM_SOURCE" ]; then
-    echo "Error: VSIM source directory '$VSIM_SOURCE' does not exist."
-    exit 1
-fi
-
-# --- STEP 1: Clean and update pulpino/vsim ---
-echo "Cleaning '$VSIM_TARGET/'..."
+# VSIM clean and setup
 rm -rf "$VSIM_TARGET"/*
+mkdir -p "$VSIM_TARGET"
+cp -r "$VSIM_BASE_SOURCE"/* "$VSIM_TARGET"/ && echo "VSIM setup updated." || echo "Failed to update VSIM."
 
-echo "Copying VSIM setup files from '$VSIM_SOURCE/' to '$VSIM_TARGET/'..."
-cp -rv "$VSIM_SOURCE"/* "$VSIM_TARGET"/
+# Copy vcompile script
+if [ "$SKIP_VCOMPILE" -eq 0 ]; then
+    mkdir -p "$VSIM_VCOMPILE_DEST"
+    cp "$SOURCE_VCOMPILE" "$VSIM_VCOMPILE_DEST/" && echo "vcompile_pulpino.sh copied." || echo "Failed to copy vcompile_pulpino.sh."
+else
+    echo "vcompile_pulpino.sh not found. Skipped."
+fi
 
-echo "Copying list.txt to '$LIST_FILE_DEST'..."
-cp -v "$LIST_FILE_SOURCE" "$LIST_FILE_DEST"
+# Copy RTL files
+if [ "$(ls -A "$SOURCE_RTL")" ]; then
+    cp -vf "$SOURCE_RTL"/* "$DEST_DIR_RTL"/ && echo "RTL files copied." || echo "Failed to copy RTL files."
+else
+    echo "No RTL files found. Skipped."
+fi
 
-# --- STEP 2: Swap RTL files ---
-echo "Swapping files from '$SOURCE_DIR/' into '$DEST_DIR_RTL/' (overwriting existing files)..."
-cp -vf "$SOURCE_DIR"/* "$DEST_DIR_RTL"/
+# Copy Components
+mkdir -p "$DEST_DIR_COMPONENTS"
+if [ "$(ls -A "$SOURCE_COMPONENTS")" ]; then
+    cp -vf "$SOURCE_COMPONENTS"/* "$DEST_DIR_COMPONENTS"/ && echo "Components copied." || echo "Failed to copy components."
+else
+    echo "No component files found. Skipped."
+fi
 
-echo "All operations completed successfully."
+# Copy TB files
+if [ "$(ls -A "$SOURCE_TB")" ]; then
+    cp -vf "$SOURCE_TB"/* "$DEST_DIR_TB"/ && echo "Testbench files copied." || echo "Failed to copy testbench files."
+else
+    echo "No testbench files found. Skipped."
+fi
+
+echo "Script finished."
