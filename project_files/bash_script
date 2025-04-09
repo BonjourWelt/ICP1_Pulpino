@@ -95,6 +95,45 @@ if [ "$1" == "build" ]; then
     exit 0
 fi
 
+# Handle confirm_merge
+if [ "$1" == "confirm_merge" ]; then
+    echo "Merging new_* folders into confirmed_* folders..."
+
+    # Ensure confirmed target folders exist
+    mkdir -p "$CONFIRMED/confirmed_rtl"
+    mkdir -p "$CONFIRMED/confirmed_rtl/components"
+    mkdir -p "$CONFIRMED/confirmed_tb"
+    mkdir -p "$CONFIRMED/confirmed_vsim_compile"
+
+    # Copy RTL files
+    if [ -d "$WORKBENCH/new_rtl" ]; then
+        cp -f "$WORKBENCH/new_rtl"/* "$CONFIRMED/confirmed_rtl/" 2>/dev/null
+        echo "new_rtl → confirmed_rtl"
+    fi
+
+    if [ -d "$WORKBENCH/new_rtl/components" ]; then
+        cp -f "$WORKBENCH/new_rtl/components"/* "$CONFIRMED/confirmed_rtl/components/" 2>/dev/null
+        echo "new_rtl/components → confirmed_rtl/components"
+    fi
+
+    # Copy TB files
+    if [ -d "$WORKBENCH/new_tb" ]; then
+        cp -f "$WORKBENCH/new_tb"/* "$CONFIRMED/confirmed_tb/" 2>/dev/null
+        echo "new_tb → confirmed_tb"
+    fi
+
+    # Copy VSim compile script
+    if [ -d "$WORKBENCH/new_vsim_compile" ]; then
+        cp -f "$WORKBENCH/new_vsim_compile"/* "$CONFIRMED/confirmed_vsim_compile/" 2>/dev/null
+        echo "new_vsim_compile → confirmed_vsim_compile"
+    fi
+
+    echo "Merge completed."
+    exit 0
+fi
+
+
+
 # Handle commit/revert
 if [ "$#" -ne 1 ]; then usage; fi
 
