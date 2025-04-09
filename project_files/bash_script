@@ -1,15 +1,33 @@
 #!/bin/bash
 
-# Check if ./build is a file instead of a directory
+# === Startup checks ===
+
+# Show help if no arguments or explicitly requested
+if [ "$#" -eq 0 ] || [ "$1" == "help" ]; then
+    usage() {
+        echo "Usage:"
+        echo "  ./run_script help              - Show this message"
+        echo "  ./run_script mkdirs            - Create all required source directories"
+        echo "  ./run_script commit            - Copy files from new_* folders into RTL/TB/VSIM"
+        echo "  ./run_script revert            - Revert to files from confirmed_* folders"
+        echo "  ./run_script confirm_merge     - Overwrite confirmed_* folders with new_* folders"
+        echo "  ./run_script build <project> [-spi] - Configure and build the specified project"
+        exit 1
+    }
+    usage
+fi
+
+# Check if ./build is a file
 if [ -f "./build" ]; then
-    echo "Error: A file named 'build' exists. Please remove or rename it."
+    echo "Error: A file named 'build' exists in sw/. Please remove or rename it."
     exit 1
 fi
 
 # Always ensure ./build exists as a directory
 mkdir -p "./build"
 
-# Base paths
+# === Path setup ===
+
 WORKBENCH="./workbench"
 CONFIRMED="$WORKBENCH/confirmed"
 VSIM_TARGET="../vsim"
@@ -18,7 +36,6 @@ DEST_DIR_RTL="../rtl"
 DEST_DIR_TB="../tb"
 DEST_DIR_COMPONENTS="$DEST_DIR_RTL/components"
 
-# Required source dirs for mkdirs
 REQUIRED_DIRS=(
     "$WORKBENCH/new_rtl"
     "$WORKBENCH/new_tb"
@@ -29,7 +46,7 @@ REQUIRED_DIRS=(
     "$CONFIRMED/original_vsim"
 )
 
-# Handle mkdirs
+# === Handle mkdirs ===
 if [ "$1" == "mkdirs" ]; then
     CREATED=0
     for dir in "${REQUIRED_DIRS[@]}"; do
@@ -50,39 +67,51 @@ if [ "$1" == "mkdirs" ]; then
     exit 0
 fi
 
-# Usage message
-usage() {
-    echo "Usage:"
-    echo "  ./run_script commit            - Copy files from new_* folders"
-    echo "  ./run_script revert            - Copy files from confirmed_* folders"
-    echo "  ./run_script mkdirs            - Create all required source directories only"
-    echo "  ./run_script build <project>   - Configure and build specified project"
-    exit 1
-}
+# === Handle confirm_merge ===
+if [ "$1" == "confirm_merge" ]; then
+    echo "Merging new_* folders into confirmed_* folders..."
 
-# Handle build <project>
+    mkdir -p "$CONFIRMED/confirmed_rtl/components"
+    mkdir -p "$CONFIRMED/confirmed_tb"
+    mkdir -p "$CONFIRMED/confirmed_vsim_compile"
+
+    cp -f "$WORKBENCH/new_rtl"/* "$CONFIRMED/confirmed_rtl/" 2>/dev/null
+    cp -f "$WORKBENCH/new_rtl/components"/* "$CONFIRMED/confirmed_rtl/components/" 2>/dev/null
+    cp -f "$WORKBENCH/new_tb"/* "$CONFIRMED/confirmed_tb/" 2>/dev/null
+    cp -f "$WORKBENCH/new_vsim_compile"/* "$CONFIRMED/confirmed_vsim_compile/" 2>/dev/null
+
+    echo "Merge completed."
+    exit 0
+fi
+
+# === Handle build ===
 if [ "$1" == "build" ]; then
     if [ -z "$2" ]; then
-        echo "Usage: ./run_script build <project_name>"
+        echo "Usage: ./run_script build <project_name> [-spi]"
         exit 1
     fi
 
     PROJECT_NAME="$2"
+    VSIM_MODE="vsim"
+    if [ "$3" == "-spi" ]; then
+        VSIM_MODE="vsim.spi"
+    fi
 
     if [ ! -f setup2022.efd ]; then
-        echo "Error: setup2022.efd not found in pulpino/sw/"
+        echo "Error: setup2022.efd not found in sw/"
         exit 1
     fi
 
     if [ ! -f cmake_configure.riscv.gcc.sh ]; then
-        echo "Error: cmake_configure.riscv.gcc.sh not found in pulpino/sw/"
+        echo "Error: cmake_configure.riscv.gcc.sh not found in sw/"
         exit 1
     fi
 
-    
-    cp setup2022.efd build/ || { echo "Failed to copy setup2022.efd"; exit 1; }
-    cp cmake_configure.riscv.gcc.sh build/ || { echo "Failed to copy cmake_configure script"; exit 1; }
-    cd build || exit 1
+    cp setup2022.efd ./build/ || { echo "Failed to copy setup2022.efd"; exit 1; }
+    cp cmake_configure.riscv.gcc.sh ./build/ || { echo "Failed to copy cmake_configure script"; exit 1; }
+
+    cd ./build || exit 1
+
     make clean
 
     source setup2022.efd || { echo "Failed to source setup2022.efd"; exit 1; }
@@ -90,76 +119,37 @@ if [ "$1" == "build" ]; then
 
     make "${PROJECT_NAME}.read" && echo "${PROJECT_NAME}.read completed." || echo "make ${PROJECT_NAME}.read failed."
     make vcompile && echo "vcompile completed." || echo "make vcompile failed."
-    make "${PROJECT_NAME}.vsimc" && echo "${PROJECT_NAME}.vsimc completed." || echo "make ${PROJECT_NAME}.vsimc failed."
+    make "${PROJECT_NAME}.${VSIM_MODE}" && echo "${PROJECT_NAME}.${VSIM_MODE} completed." || echo "make ${PROJECT_NAME}.${VSIM_MODE} failed."
 
     exit 0
 fi
 
-# Handle confirm_merge
-if [ "$1" == "confirm_merge" ]; then
-    echo "Merging new_* folders into confirmed_* folders..."
-
-    # Ensure confirmed target folders exist
-    mkdir -p "$CONFIRMED/confirmed_rtl"
-    mkdir -p "$CONFIRMED/confirmed_rtl/components"
-    mkdir -p "$CONFIRMED/confirmed_tb"
-    mkdir -p "$CONFIRMED/confirmed_vsim_compile"
-
-    # Copy RTL files
-    if [ -d "$WORKBENCH/new_rtl" ]; then
-        cp -f "$WORKBENCH/new_rtl"/* "$CONFIRMED/confirmed_rtl/" 2>/dev/null
-        echo "new_rtl → confirmed_rtl"
-    fi
-
-    if [ -d "$WORKBENCH/new_rtl/components" ]; then
-        cp -f "$WORKBENCH/new_rtl/components"/* "$CONFIRMED/confirmed_rtl/components/" 2>/dev/null
-        echo "new_rtl/components → confirmed_rtl/components"
-    fi
-
-    # Copy TB files
-    if [ -d "$WORKBENCH/new_tb" ]; then
-        cp -f "$WORKBENCH/new_tb"/* "$CONFIRMED/confirmed_tb/" 2>/dev/null
-        echo "new_tb → confirmed_tb"
-    fi
-
-    # Copy VSim compile script
-    if [ -d "$WORKBENCH/new_vsim_compile" ]; then
-        cp -f "$WORKBENCH/new_vsim_compile"/* "$CONFIRMED/confirmed_vsim_compile/" 2>/dev/null
-        echo "new_vsim_compile → confirmed_vsim_compile"
-    fi
-
-    echo "Merge completed."
-    exit 0
-fi
-
-
-
-# Handle commit/revert
-if [ "$#" -ne 1 ]; then usage; fi
-
+# === Handle commit and revert ===
 case "$1" in
     commit)
         SOURCE_RTL="$WORKBENCH/new_rtl"
         SOURCE_COMPONENTS="$WORKBENCH/new_rtl/components"
         SOURCE_TB="$WORKBENCH/new_tb"
-        SOURCE_VCOMPILE="$WORKBENCH/new_vsim_compile/vcompile_pulpino.sh"
+        SOURCE_VCOMPILE_DIR="$WORKBENCH/new_vsim_compile"
         VSIM_BASE_SOURCE="$CONFIRMED/original_vsim"
         ;;
     revert)
         SOURCE_RTL="$CONFIRMED/confirmed_rtl"
         SOURCE_COMPONENTS="$CONFIRMED/confirmed_rtl/components"
         SOURCE_TB="$CONFIRMED/confirmed_tb"
-        SOURCE_VCOMPILE="$CONFIRMED/confirmed_vsim_compile/vcompile_pulpino.sh"
+        SOURCE_VCOMPILE_DIR="$CONFIRMED/confirmed_vsim_compile"
         VSIM_BASE_SOURCE="$CONFIRMED/original_vsim"
         ;;
     *)
-        usage
+        echo "Unknown argument: $1"
+        echo "Use './run_script help' for a list of valid commands."
+        exit 1
         ;;
 esac
 
-# Create missing source dirs (if any) and abort further operations
+# Check and create missing dirs
 SKIP_OPERATIONS=0
-for dir in "$SOURCE_RTL" "$SOURCE_TB" "$SOURCE_COMPONENTS" "$VSIM_BASE_SOURCE" "$(dirname "$SOURCE_VCOMPILE")"; do
+for dir in "$SOURCE_RTL" "$SOURCE_TB" "$SOURCE_COMPONENTS" "$VSIM_BASE_SOURCE" "$SOURCE_VCOMPILE_DIR"; do
     if [ ! -d "$dir" ]; then
         mkdir -p "$dir"
         echo "Created: $dir"
@@ -167,8 +157,7 @@ for dir in "$SOURCE_RTL" "$SOURCE_TB" "$SOURCE_COMPONENTS" "$VSIM_BASE_SOURCE" "
     fi
 done
 
-mkdir -p "$WORKBENCH/new_rtl/components"
-mkdir -p "$CONFIRMED/confirmed_rtl/components"
+mkdir -p "$DEST_DIR_COMPONENTS"
 
 if [ "$SKIP_OPERATIONS" -eq 1 ]; then
     echo "One or more source directories were missing and have been created."
@@ -176,64 +165,45 @@ if [ "$SKIP_OPERATIONS" -eq 1 ]; then
     exit 0
 fi
 
-# Check for vcompile script
-if [ ! -f "$SOURCE_VCOMPILE" ]; then
-    SKIP_VCOMPILE=1
-else
-    SKIP_VCOMPILE=0
-fi
-
-# Reset vsim
+# === VSIM cleanup and base copy ===
 rm -rf "$VSIM_TARGET"/*
 mkdir -p "$VSIM_TARGET"
 cp -r "$VSIM_BASE_SOURCE"/* "$VSIM_TARGET"/ && echo "VSIM setup updated." || echo "Failed to update VSIM."
 
-# Copy vcompile script
-if [ "$SKIP_VCOMPILE" -eq 0 ]; then
-    mkdir -p "$VSIM_VCOMPILE_DEST"
-    cp "$SOURCE_VCOMPILE" "$VSIM_VCOMPILE_DEST/" && echo "vcompile_pulpino.sh copied." || echo "Failed to copy vcompile_pulpino.sh."
+# === Copy vcompile folder contents ===
+mkdir -p "$VSIM_VCOMPILE_DEST"
+if [ -d "$SOURCE_VCOMPILE_DIR" ]; then
+    cp -f "$SOURCE_VCOMPILE_DIR"/* "$VSIM_VCOMPILE_DEST"/ 2>/dev/null
+    echo "vcompile folder contents copied."
 else
-    echo "vcompile_pulpino.sh not found. Skipped."
+    echo "vcompile folder missing. Skipped."
 fi
 
-# Copy RTL files
-if [ "$(ls -A "$SOURCE_RTL")" ]; then
+# === Copy RTL files ===
+if [ "$(ls -A "$SOURCE_RTL" 2>/dev/null)" ]; then
     for file in "$SOURCE_RTL"/*; do
         filename=$(basename "$file")
-        if cp -f "$file" "$DEST_DIR_RTL"/; then
-            echo "$filename copied"
-        else
-            echo "failed to copy $filename"
-        fi
+        cp -f "$file" "$DEST_DIR_RTL"/ && echo "$filename copied" || echo "failed to copy $filename"
     done
 else
     echo "No RTL files found. Skipped."
 fi
 
-# Copy Components
-mkdir -p "$DEST_DIR_COMPONENTS"
-if [ "$(ls -A "$SOURCE_COMPONENTS")" ]; then
+# === Copy component files ===
+if [ "$(ls -A "$SOURCE_COMPONENTS" 2>/dev/null)" ]; then
     for file in "$SOURCE_COMPONENTS"/*; do
         filename=$(basename "$file")
-        if cp -f "$file" "$DEST_DIR_COMPONENTS"/; then
-            echo "$filename copied"
-        else
-            echo "failed to copy $filename"
-        fi
+        cp -f "$file" "$DEST_DIR_COMPONENTS"/ && echo "$filename copied" || echo "failed to copy $filename"
     done
 else
     echo "No component files found. Skipped."
 fi
 
-# Copy TB files
-if [ "$(ls -A "$SOURCE_TB")" ]; then
+# === Copy TB files ===
+if [ "$(ls -A "$SOURCE_TB" 2>/dev/null)" ]; then
     for file in "$SOURCE_TB"/*; do
         filename=$(basename "$file")
-        if cp -f "$file" "$DEST_DIR_TB"/; then
-            echo "$filename copied"
-        else
-            echo "failed to copy $filename"
-        fi
+        cp -f "$file" "$DEST_DIR_TB"/ && echo "$filename copied" || echo "failed to copy $filename"
     done
 else
     echo "No testbench files found. Skipped."
