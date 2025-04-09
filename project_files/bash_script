@@ -79,11 +79,11 @@ if [ "$1" == "build" ]; then
         exit 1
     fi
 
-    make clean
-    cd .. || exit 1
-    cp sw/setup2022.efd build/ || { echo "Failed to copy setup2022.efd"; exit 1; }
-    cp sw/cmake_configure.riscv.gcc.sh build/ || { echo "Failed to copy cmake_configure script"; exit 1; }
+    
+    cp setup2022.efd build/ || { echo "Failed to copy setup2022.efd"; exit 1; }
+    cp cmake_configure.riscv.gcc.sh build/ || { echo "Failed to copy cmake_configure script"; exit 1; }
     cd build || exit 1
+    make clean
 
     source setup2022.efd || { echo "Failed to source setup2022.efd"; exit 1; }
     source cmake_configure.riscv.gcc.sh || { echo "Failed to source cmake_configure.riscv.gcc.sh"; exit 1; }
