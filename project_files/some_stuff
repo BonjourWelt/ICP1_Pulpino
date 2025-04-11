@@ -2,3 +2,6 @@ report_timing -nworst 10 -verbose -lint > my_timing_report.rpt
 
 
 https://community.cadence.com/cadence_technology_forums/f/digital-implementation/25670/how-to-get-all-multidriven-net
+
+
+et_attribute driver [get_net /designs/pulpino_top_pads/instances_hier/pulpino_top_rtl_inst/instances_hier/core_region_i/nets/core_axi_wdata[18]]
