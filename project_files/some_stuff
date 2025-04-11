@@ -1,0 +1,1 @@
+report_timing -nworst 10 -verbose -lint > my_timing_report.rpt
