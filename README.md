@@ -46,7 +46,7 @@ change signals in wave.do:\
 find in library using the binoculars -> recompile -> restart sim
 
 --------------------------
-Synthesis
+# Synthesis
 These folders need to exist in the main project directory along side rtl.
 • Copy genus folder and genus.sh to main project folder
 
@@ -66,6 +66,15 @@ To Do:
 • Also I have not changed the clock constraints and they are the same ones as for matrix multiplication. I am not sure if we have new constraints. 
  
 ![image](https://github.com/user-attachments/assets/801a3d8c-4460-4db9-b50f-9242c498be53)
+
+--------------------
+## 4.25 records
+1. Set clocks asychronous: set_clock_groups -asynchronous -group $ClkName1  -group $ClkName2 -group $ClkName3.
+2. How to find commands using cadence help:  /usr/local-eit/cad2/cadence/gen161/bin/cdnshelp.
+3. Here is a black_box in sp_wram_wrapper, the sections used for FPGA and ASIC should be commented.
+4. Report black_box problem in genus: add this command in design_setup.tcl: set_attribute hdl_error_on_blackbox true /
+
+
 
 
 
