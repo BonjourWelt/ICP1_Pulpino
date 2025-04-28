@@ -73,6 +73,10 @@ To Do:
 2. How to find commands using cadence help:  /usr/local-eit/cad2/cadence/gen161/bin/cdnshelp.
 3. Here is a black_box in sp_wram_wrapper, the sections used for FPGA and ASIC should be commented.
 4. Report black_box problem in genus: add this command in design_setup.tcl: set_attribute hdl_error_on_blackbox true /
+------------------
+## 4.28 records
+1. When run memory test, we have to change GCC_MARCH="IM" in cmake_configure.riscv.gcc.sh. And delete the whole build folder then rebuild it.
+2. If "make vcompile" fails, try exiting the terminal and re-run all steps from start.
 
 
 
