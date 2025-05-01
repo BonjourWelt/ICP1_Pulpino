@@ -1,3 +1,16 @@
+Meeting recordings:
+2025/03/21
+Amendments to the manual: 
+    Chapter 3: 8096*32 -> 8192*32;
+    Appendix 2 directory tree: SPHD110420.v/ SPHD110420.verilog.map -> SPHDL100909.v/ SPHDL100909.verilog.map.
+Missions:
+    Read rtl files of pulpino modules from top to bottom, find which file we are editing in order to include our sram. 
+    dp_ram: duo-port ram. sp_ram: single-port ram. The rams to be replaced are "sp_ram".
+
+2025/03/28 
+
+
+
 Pulpino files see [here: ](https://github.com/pulp-platform/pulpino)
 
 # Configuration files changes:   
