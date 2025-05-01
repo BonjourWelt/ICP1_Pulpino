@@ -1,0 +1,183 @@
+Miscellanous issues:
+
+	• "couldn’t find path" to lib files:
+Changing ram library file to correct one got rid of "couldn’t find path" which was for some reaosn triggering for all libraries until this was fixed.
+	
+	• Warning: Multiply driven nets 
+	In our sp_ram_wrap we have three sections in a big mux that are all driving the same ports of the top module. 
+		○ sp_ram_i
+		○ sp_ram_bank
+		○ ram
+	For some reason genus doesn’t recognize this and assumes they are all trying to drive the ports at the same time. 
+	SOLUTION:
+Commenting out all parts except for the RAM part removed the multiple driver issues.
+	
+	• Black Box Issue:
+	The following don’t have any RTL files associated with them leading to black box issues
+		○ sp_ram_i
+		○ sp_ram_bank
+
+	• Design_setup.tcl: Changing the file list for synthesis:
+		○ Duplicated files cause the latest read file to replace the earlier version
+		○ The list does not affect multiple driven net issue
+		○ Changing the list to a random ass list didnt matter as long as needed files are there.
+		It seems adding copied files and config files in includes folder has no effect
+	
+	• Read_hdl command 
+	In genus this command has different arguments based on file type:
+		○ -sv
+		○ -vhd
+		○ -v
+		○ This means these files should be listed separately
+
+	• Unconnected peripheral ports after removing pads:
+A component port was connected to a signal that didn’t exist anymore.
+We could either defined a signal that isnt driven 
+Or just leave the component port unconnected so delete what it connects to in the instantation part.r 
+		○ It is used in APB salve 7: apb_pulpino
+The .pad_mux_o port was connected to a deleted signal. it doesnt connect to anything now.
+
+	• Loop size problem:
+File change: dc_data_buffer.v
+	The for loop is not needed so we deleted all of it except kept one line that is before end if
+
+	• CDC issue:
+		○ We have two clocks:
+			§ Clk_i
+			§ Spi_clk
+		○ They are connected to axi_spi_slave.sv
+		○ Ips:
+			§ Axi_spi_slave
+			§ Spi_slave_dc_fifo
+		○ Pulpino_top:
+it instantiates peripherals.sv
+it has both clocks in this
+		○ Peripherals.sv:
+instatntiates SPI slave axi
+Both clocks go there.
+	
+	• CDC matrix multiplier:
+		○ How do we sync data between matrix multiplier and RAM without CDC issues? 
+Do we run the matrix with main clock?
+		○ Most likely we use main clock to run it so no sync needed
+
+	• Make clocks async: 
+Set_clock_groups -asynchronous -group $ClkName1 - group $ClkName2 -group $ClkName3
+	Why?
+	
+	• In ram_wrapper we must add negedge before rst_i otherwise it wont work
+
+------------------------------------------------------------------------
+Tips
+	• Not all RTL files are synthesizable
+
+	• Change effort levels to medium and then high when its working (there is no low option)
+
+	• Increase info level in warnings?
+
+	• Sometimes genus will give errors due to multiple runs. Just exit and maybe delete log files and stuff and redo.
+
+	• Adding a mux to time multiplex a signal to avoid multiply driver ports adds a delay due to the mux itself.
+
+------------------------------------------------------------------------
+Todo:
+	
+	• List all RTL files and compare agains the list of files that we synthesize. Why are we not including some files?
+		○ Some are not synthesizable
+		○ Some are called with the 'include directive
+		○ Define files do not need to be listed but their folder must be added to search path
+		○ RTL file must be listed and path added
+		○ Some are due to removed peripherals
+
+	• Upload matrix multiplier from lab
+
+	• Find open-source version of tools and Ips
+
+	• Folder organization:
+We can move files to different folders for different purposes.
+We need these three folders:
+		○ Pulpino main is needed for simulation to see if our changes in the RTL work as intended
+		○ Synthesis folder: Only needs a copy of the relevant RTL files
+		○ PnR: same as synth only needs a copy of SDF and IO pads files and libraries etc
+		○ We can also initiate the tools in a separate folder.
+Credit: Raul
+
+	• Write a test program with for loops to test ram
+
+	• Add peripheral:
+	Matrix core replaces timer peripheral
+		○ Peripheral.sv
+			§ Defined component for matrix
+			§ Defined internal signals and connect the ports of matrix component to internal signals
+			§ Connect all signals approrioately
+		○ Pulpino_top.sv
+			§ It calls the peripherals.sv so here we need to add matrix module signals too
+		○ Write a C version of matrix multiplier
+		○ Do we add a ROM for coefficinet matrix?
+		○ How many pads can we use for matrix multiplier?
+		○ Which peripherals can we remove 
+		○ If we have too few pads maybe write a time-multiplexed version of matmult top to break up the signal
+
+	• Multiple copies of main clock
+	Will these be in sync? 
+even though they are copies they are separate clocks
+	In peripherals.sv there is multiple copies of cloc signal wach bit goes to one peripheral device. Why not connect to the same clock? Why make multiple?
+	Its under clock gating
+
+	• We have a slack of 950 ps
+		○ We can tighten up the timing and increase clock rate
+		○ Clock rate for peripherals could be a lot faster Raul said
+		○ Timing report doesnt show the slack for peripherals and only shows main clock
+
+	• Create_clock.tcl
+Multiple clock domains must be defined and the connect to relevant domain through port definitions. They can be called anything. TOP_clk define is common for all domains
+
+	• Multiple clock waveforms
+Is this the CDC issue?
+	Not solved
+	
+	• Clock was open, also apparantly periods for spi and jtag must be a lot smaller
+	Not solved
+
+------------------------------------------------------------------------
+Post synthesis simulation: 
+	• Make a vcompile_ps
+		○ Libraries: found somwhere 
+			§ Replace the ram in it
+			§ It gets referenced here not directly added
+		○ Tb_sh: make one 
+		○ Netlist: get from genus
+
+	• Sfd file is referenced in MakeFile ~matrix/test
+
+	• If we want to do manual post synt in questa we generate a bitstream of the compile c program and feed it as a stiumuli
+
+	• Relevent files:
+		○ Make file in build: search for helloworld.vsim.spi.ps
+		
+		○ Makefile2 in vsim/tcl_files/config
+		
+		○ MakeFIle2
+sw/build/CMakeFiles
+		
+		○ Build_rtl_sim.csh: this is where you put the netlists and such
+		○ Sdf file:
+			§ Can be added manually 
+			§ Can be added via script: 
+				For matrix mul it i in a makefile in test folder
+				
+		○ CMakeLists.txt in sw:
+clue about which file to find. This will be shown as an error too if we try to run vcompile.spi.ps
+relevant section: reference to file ./vcompile/build_rtl_sim.csh
+		Actually:
+		Make vcompile.ps
+			Will give error:
+				./vcompile/vcompile_ps.csh: No such file or directory
+		○ Run_spi.tcl
+it references: ./tcl_files/config/vsim.tcl
+		
+		○ Build_libs.sh:
+has references to behavioral models of the library files which we will need in post synth simulation since the simualtor is only getting a netlist and sdf file so it has a list of nets and their connections and the delay the cause but do not know how these nets behave. For example an inverter has inputs and outputs, a delay and a behavior which is it inverts the input at its output. Its the last part that the *.v files in library provide.
+		○ Build.make:
+build/apps/helloworld/CMakeFiles/helloworld.vsim.spi.dir
+
