@@ -19,11 +19,10 @@ void matrixMultiply(int inputMatrix[ROWS_INPUT][COLS_INPUT],
 }
 
 // Function to print a matrix
-void printMatrix(int matrix[ROWS_INPUT][COLS_COEFFICIENT]) {
-    for (int i = 0; i < ROWS_INPUT; i++) {
-        for (int j = 0; j < COLS_COEFFICIENT; j++) {
-            printf("%d ", matrix[i][j]);
-        }
+void printMatrix(int *matrix, int rows, int cols) {
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++)
+            printf("%d ", matrix[i * cols + j]);
         printf("\n");
     }
 }
@@ -40,6 +39,9 @@ int main() {
         {25, 26, 27, 28},
         {29, 30, 31, 32}
     };
+
+    printf("Coefficient matrix:\n");
+    printMatrix((int *)coefficientMatrix, COLS_INPUT, COLS_COEFFICIENT);
 
     // Define the result matrix
     int resultMatrix[ROWS_INPUT][COLS_COEFFICIENT];
@@ -60,12 +62,15 @@ int main() {
     for (int matrixIndex = 0; matrixIndex < numInputMatrices; matrixIndex++) {
         int (*inputMatrix)[COLS_INPUT] = inputMatrices[matrixIndex];
 
+        printf("Input matrix %d:\n", matrixIndex + 1);
+        printMatrix((int *)inputMatrix, ROWS_INPUT, COLS_INPUT);
+
         // Perform matrix multiplication
         matrixMultiply(inputMatrix, coefficientMatrix, resultMatrix);
 
         // Print the resulting matrix
         printf("Result of matrix multiplication for the %d-th input matrix:\n", matrixIndex + 1);
-        printMatrix(resultMatrix);
+        printMatrix((int *)resultMatrix, ROWS_INPUT, COLS_COEFFICIENT);
     }
 
     return 0;
