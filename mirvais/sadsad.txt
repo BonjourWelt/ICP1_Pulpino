@@ -1,0 +1,5 @@
+rm -fr ./mozilla/
+du -h --max-depth=1
+cd ./.cache
+du -h --max-depth=1
+/Home
