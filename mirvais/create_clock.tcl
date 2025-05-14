@@ -29,7 +29,7 @@ set_attribute slew_fall $ClkFall_uncertainty_i $ClkName1
 
 #-------------------------------------------------------------------
 
-set PERIOD_spi 10000
+set PERIOD_spi 40000
 set ClkDomain_SPI SPI
 set ClkName2 spi_clk
 set ClkLatency_spi  500
@@ -54,7 +54,7 @@ set_attribute slew_fall $ClkFall_uncertainty_spi $ClkName2
 
 #-------------------------------------------------------------------
 
-set PERIOD_jtag 10000
+set PERIOD_jtag 100000
 set ClkDomain_JTAG JTAG
 set ClkName3 jtag_clk
 set ClkLatency_jtag  500
