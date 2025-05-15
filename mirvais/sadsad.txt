@@ -6,3 +6,8 @@ du -h --max-depth=1
 
 
 /export/space/nobackup/pulp_attempt_15000/Innovus/Initialize_Innovus
+
+ssh mi7857mo-s@grinulf
+YES
+password fr LU account
+
