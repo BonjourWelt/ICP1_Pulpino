@@ -90,8 +90,9 @@ To Do:
 ## 4.28 records
 1. When run memory test, we have to change GCC_MARCH="IM" in cmake_configure.riscv.gcc.sh. And delete the whole build folder then rebuild it.
 2. If "make vcompile" fails, try exiting the terminal and re-run all steps from start.
-
-
+-------
+## 5.15 records
+1. Multiple design problem: restart terminal.
 
 
 
