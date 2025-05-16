@@ -1,80 +1,86 @@
 #include <stdio.h>
 
+#define numInputMatrices 5
 #define ROWS_INPUT 4
 #define COLS_INPUT 8
+#define ROWS_COEFFICIENT 8
 #define COLS_COEFFICIENT 4
 
-// Function to perform matrix multiplication
-void matrixMultiply(int inputMatrix[ROWS_INPUT][COLS_INPUT], 
-                    int coefficientMatrix[COLS_INPUT][COLS_COEFFICIENT], 
-                    int resultMatrix[ROWS_INPUT][COLS_COEFFICIENT]) {
+void matrixMultiply(int inputMatrix[], int coefficientMatrix[], int resultMatrix[]) {
     for (int i = 0; i < ROWS_INPUT; i++) {
         for (int j = 0; j < COLS_COEFFICIENT; j++) {
-            resultMatrix[i][j] = 0;
+            resultMatrix[i * COLS_COEFFICIENT + j] = 0;
             for (int k = 0; k < COLS_INPUT; k++) {
-                resultMatrix[i][j] += inputMatrix[i][k] * coefficientMatrix[k][j];
+                resultMatrix[i * COLS_COEFFICIENT + j] += inputMatrix[i * COLS_INPUT + k] * coefficientMatrix[k * COLS_COEFFICIENT + j];
             }
         }
     }
 }
 
-// Function to print a matrix
-void printMatrix(int *matrix, int rows, int cols) {
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++)
-            printf("%d ", matrix[i * cols + j]);
-        printf("\n");
+void compareResults(int resultMatrix[], int expectedResult[]) {
+    int isEqual = 1;
+    for (int i = 0; i < ROWS_INPUT * COLS_COEFFICIENT; i++) {
+        if (resultMatrix[i] != expectedResult[i]) {
+            isEqual = 0;
+            break;
+        }
+    }
+
+    if (isEqual) {
+        printf("The computed results match the expected results.\n");
+    } else {
+        printf("The computed results do not match the expected results.\n");
     }
 }
 
 int main() {
-    // Define and initialize the coefficient matrix
-    int coefficientMatrix[COLS_INPUT][COLS_COEFFICIENT] = {
-        {1, 2, 3, 4},
-        {5, 6, 7, 8},
-        {9, 10, 11, 12},
-        {13, 14, 15, 16},
-        {17, 18, 19, 20},
-        {21, 22, 23, 24},
-        {25, 26, 27, 28},
-        {29, 30, 31, 32}
+    int inputMatrices[numInputMatrices][ROWS_INPUT * COLS_INPUT] = {
+        {87, 17, 92, 14, 15, 81, 42, 83, 95, 74, 94, 30, 93, 123, 110, 11, 47, 47, 87, 76, 100, 47, 26, 11, 98, 26, 49, 70, 29, 82, 62, 19},
+        {99, 13, 37, 30, 67, 12, 51, 13, 14, 100, 37, 77, 122, 55, 88, 96, 55, 83, 14, 119, 24, 34, 101, 62, 98, 50, 35, 5, 86, 55, 57, 77},
+        {8, 40, 98, 88, 16, 17, 12, 1, 54, 83, 92, 67, 14, 80, 16, 17, 13, 18, 21, 25, 40, 40, 28, 32, 113, 89, 71, 23, 27, 10, 116, 90},
+        {71, 40, 21, 79, 125, 22, 33, 50, 9, 87, 51, 125, 51, 79, 20, 48, 20, 96, 111, 45, 87, 37, 67, 106, 76, 43, 38, 57, 54, 46, 71, 94},
+        {54, 55, 16, 3, 37, 40, 83, 122, 119, 58, 31, 97, 96, 94, 94, 13, 87, 59, 27, 13, 105, 22, 21, 85, 114, 66, 89, 20, 121, 69, 86, 5}
     };
 
-    printf("Coefficient matrix:\n");
-    printMatrix((int *)coefficientMatrix, COLS_INPUT, COLS_COEFFICIENT);
-
-    // Define the result matrix
-    int resultMatrix[ROWS_INPUT][COLS_COEFFICIENT];
-
-    // Number of input matrices
-    #define numInputMatrices  5
-
-    // Pre-define 5 input matrices of size 4x8
-    int inputMatrices[numInputMatrices][ROWS_INPUT][COLS_INPUT] = {
-        {{1, 2, 3, 4, 5, 6, 7, 8}, {9, 10, 11, 12, 13, 14, 15, 16}, {17, 18, 19, 20, 21, 22, 23, 24}, {25, 26, 27, 28, 29, 30, 31, 32}},
-        {{33, 34, 35, 36, 37, 38, 39, 40}, {41, 42, 43, 44, 45, 46, 47, 48}, {49, 50, 51, 52, 53, 54, 55, 56}, {57, 58, 59, 60, 61, 62, 63, 64}},
-        {{65, 66, 67, 68, 69, 70, 71, 72}, {73, 74, 75, 76, 77, 78, 79, 80}, {81, 82, 83, 84, 85, 86, 87, 88}, {89, 90, 91, 92, 93, 94, 95, 96}},
-        {{97, 98, 99, 100, 101, 102, 103, 104}, {105, 106, 107, 108, 109, 110, 111, 112}, {113, 114, 115, 116, 117, 118, 119, 120}, {121, 122, 123, 124, 125, 126, 127, 128}},
-        {{129, 130, 131, 132, 133, 134, 135, 136}, {137, 138, 139, 140, 141, 142, 143, 144}, {145, 146, 147, 148, 149, 150, 151, 152}, {153, 154, 155, 156, 157, 158, 159, 160}}
+    int coefficientMatrix[ROWS_COEFFICIENT * COLS_COEFFICIENT] = {
+     3,  8, 18, 1,
+    22,  15, 40,  10,
+    11,  2,  3,  4,
+     1,  4,  2,  0,
+     8, 12,  16,  2,
+     3,  6,  9,  12,
+     1, 1,  1,  1,
+     2, 2,  2,  2
     };
 
-    // Loop through and process each input matrix
-    for (int matrixIndex = 0; matrixIndex < numInputMatrices; matrixIndex++) {
-        int (*inputMatrix)[COLS_INPUT] = inputMatrices[matrixIndex];
+    int expectedResults[5][ROWS_INPUT * COLS_COEFFICIENT] = {
+        {2232, 2065, 3727, 1835, 4222, 4164, 7739, 3005, 3197, 3089, 5210, 1677, 2053, 2492, 4393, 1696},
+        {1669, 2134, 3730, 732, 4147, 4068, 7244, 2346, 2783, 2906, 5505, 1622, 2848, 3197, 5961, 1781},
+        {2263, 1520, 2637, 1050, 3469, 2827, 5696, 2290, 1223, 1328, 2159, 929, 3643, 3153, 6671, 1757},
+        {2602, 3291, 5430, 1202, 3388, 3181, 5688, 2249, 4524, 3547, 6627, 2321, 2478, 2740, 4853, 1577},
+        {2294, 2312, 4505, 1549, 3241, 4108, 7251, 2263, 2966, 3270, 6102, 1450, 4064, 4122, 7652, 2296}
+    };
 
-        printf("Input matrix %d:\n", matrixIndex + 1);
-        printMatrix((int *)inputMatrix, ROWS_INPUT, COLS_INPUT);
+    int resultMatrix[ROWS_INPUT * COLS_COEFFICIENT];
 
+    for (int m = 0; m < numInputMatrices; m++) {
         // Perform matrix multiplication
-        matrixMultiply(inputMatrix, coefficientMatrix, resultMatrix);
+        matrixMultiply(inputMatrices[m], coefficientMatrix, resultMatrix);
 
-        // Print the resulting matrix
-        printf("Result of matrix multiplication for the %d-th input matrix:\n", matrixIndex + 1);
-        printMatrix((int *)resultMatrix, ROWS_INPUT, COLS_COEFFICIENT);
+        // Compare results
+        printf("Matrix %d:\n", m + 1);
+        compareResults(resultMatrix, expectedResults[m]);
+
+        // Print result matrix
+        printf("Computed Result Matrix:\n");
+        for (int i = 0; i < ROWS_INPUT * COLS_COEFFICIENT; i++) {
+            printf("%d ", resultMatrix[i]);
+            if ((i + 1) % COLS_COEFFICIENT == 0) {
+                printf("\n");
+            }
+        }
+        printf("\n");
     }
 
     return 0;
 }
-
-
-
