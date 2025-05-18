@@ -11,3 +11,22 @@ ssh mi7857mo-s@grinulf
 YES
 password fr LU account
 
+how to make a shortcut for a folder:
+open terminal on desktop and:
+nano ~/Desktop/my_folder_shortcut.desktop
+
+fill the file with:
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=My Folder
+Comment=Open my folder
+Exec=xdg-open /full/path/to/your/folder
+Icon=folder
+Terminal=false
+
+save and exit.
+
+chmod +x ~/Desktop/my_folder_shortcut.desktop
+
+run and trust.
