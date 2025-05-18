@@ -1,0 +1,43 @@
+****************************************
+Report : constraint
+	-all_violators
+	-path slack_only
+Design : PADSTOP
+Version: O-2018.06-SP5
+Date   : Sun May 18 14:54:26 2025
+****************************************
+
+
+
+
+
+
+   max_fanout
+
+                             Required        Actual
+   Pin                        Fanout         Fanout          Slack
+   -----------------------------------------------------------------
+   matrixTOP_inst/FE_OFC8_rst_n_internal/Z
+                               20.00          67.00         -47.00  (VIOLATED)
+   matrixTOP_inst/Matrix_multiplier_inst/FE_OFC0_X_load_internal_7/Z
+                               20.00          32.00         -12.00  (VIOLATED)
+   matrixTOP_inst/Matrix_multiplier_inst/FE_OFC1_X_load_internal_6/Z
+                               20.00          32.00         -12.00  (VIOLATED)
+   matrixTOP_inst/Matrix_multiplier_inst/FE_OFC2_X_load_internal_5/Z
+                               20.00          32.00         -12.00  (VIOLATED)
+   matrixTOP_inst/Matrix_multiplier_inst/FE_OFC3_X_load_internal_4/Z
+                               20.00          32.00         -12.00  (VIOLATED)
+   matrixTOP_inst/Matrix_multiplier_inst/g15919/Z
+                               20.00          32.00         -12.00  (VIOLATED)
+   matrixTOP_inst/Matrix_multiplier_inst/FE_PHC2069_FE_OFN4_X_load_internal_3/Z
+                               20.00          23.00          -3.00  (VIOLATED)
+   matrixTOP_inst/Matrix_multiplier_inst/FE_PHC2211_FE_OFN5_X_load_internal_2/Z
+                               20.00          23.00          -3.00  (VIOLATED)
+   matrixTOP_inst/Matrix_multiplier_inst/FE_PHC2231_FE_OFN6_X_load_internal_1/Z
+                               20.00          23.00          -3.00  (VIOLATED)
+   matrixTOP_inst/Matrix_multiplier_inst/g15927/Z
+                               20.00          21.00          -1.00  (VIOLATED)
+
+
+Warning: Transition times on not annotated delay arcs havebeen set to zero. Cannot perform max_transition checking. (PTE-057)
+1
