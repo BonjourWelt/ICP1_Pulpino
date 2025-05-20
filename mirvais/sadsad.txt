@@ -4,13 +4,13 @@ cd ./.cache
 du -h --max-depth=1
 /Home
 
-
+#===========================================================
 /export/space/nobackup/pulp_attempt_15000/Innovus/Initialize_Innovus
 
 ssh mi7857mo-s@grinulf
 YES
 password fr LU account
-
+#===========================================================
 how to make a shortcut for a folder:
 open terminal on desktop and:
 nano ~/Desktop/my_folder_shortcut.desktop
@@ -30,3 +30,7 @@ save and exit.
 chmod +x ~/Desktop/my_folder_shortcut.desktop
 
 run and trust.
+#===========================================================
+intiaized samples for post sim
+. inittde dicp25_init
+
