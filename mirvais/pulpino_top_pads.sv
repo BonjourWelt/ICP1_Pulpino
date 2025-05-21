@@ -18,10 +18,19 @@ module pulpino_top_pads (
     assign HIGH = 1'b1;
     assign LOW  = 1'b0;
 
+//TODO: removed INPi[1]
+
     // Input PADs
     genvar i;
+    
+    //INPi[0]
+    CPAD_S_74x50u_IN InPad (
+       .COREIO(INPi[0]),
+       .PADIO(INP[0])
+    );
+	
     generate
-        for (i = 0; i < 14; i = i + 1) begin : InPads
+        for (i = 2; i < 14; i = i + 1) begin : InPads
             CPAD_S_74x50u_IN InPad (
                 .COREIO(INPi[i]),
                 .PADIO(INP[i])
@@ -64,24 +73,28 @@ module pulpino_top_pads (
         //.testmode_i(INPi[1]), tied test mode to ground this frees up a pad
         .testmode_i(1'b0),
         .fetch_enable_i(INPi[2]),
+        .uart_rx(INPi[8]),
+        .uart_cts(INPi[9]),
+        .uart_dsr(INPi[10]),
+        
+        .gpio_out8(UTPi[9]),
+        .uart_tx(UTPi[6]),
+        .uart_rts(UTPi[7]),
+        .uart_dtr(UTPi[8]),
+
+        
         .spi_clk_i(spi_clki),
         .spi_cs_i(INPi[3]),
+        .spi_sdi0_i(INPi[4]),
+        .spi_sdi1_i(INPi[5]),
+        .spi_sdi2_i(INPi[6]),
+        .spi_sdi3_i(INPi[7]),
         .spi_mode_o(UTPi[1:0]),
         .spi_sdo0_o(UTPi[2]),
         .spi_sdo1_o(UTPi[3]),
         .spi_sdo2_o(UTPi[4]),
         .spi_sdo3_o(UTPi[5]),
-        .spi_sdi0_i(INPi[4]),
-        .spi_sdi1_i(INPi[5]),
-        .spi_sdi2_i(INPi[6]),
-        .spi_sdi3_i(INPi[7]),
-        .uart_tx(UTPi[6]),
-        .uart_rx(INPi[8]),
-        .uart_rts(UTPi[7]),
-        .uart_dtr(UTPi[8]),
-        .uart_cts(INPi[9]),
-        .uart_dsr(INPi[10]),
-        .gpio_out8(UTPi[9]),
+        
         .tck_i(jtag_clki),
         .trstn_i(INPi[11]),
         .tms_i(INPi[12]),
