@@ -1,0 +1,45 @@
+TLC notes:
+
+hat's a great clue — the difference between:
+
+./run_script
+
+and
+
+source run_script
+
+is very significant in how the shell handles execution and environment.
+
+When you run:
+
+source run_script
+
+You're telling your current shell to execute the script inline, not as a subprocess. This means:
+
+    exit statements inside the script will exit your entire shell session 😬
+
+    cd affects your current directory
+
+    Environment variables or sourced scripts like setup2022.efd stay in your shell
+
+    make clean, make, and file manipulations are happening in your live shell context
+
+So if anything in your script:
+
+    Calls exit, it will kill your terminal session
+
+    Assumes it's running in isolation (e.g., cd ./build then expects to exit after)
+
+    Relies on source loading build env into a subshell
+
+…then source run_script will cause problems.
+
+ Why ./run_script Works
+
+This executes the script in a separate Bash process, so:
+
+    exit exits only the script
+
+    cd changes affect only that subprocess
+
+    Environment pollution is contained
