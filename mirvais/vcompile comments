@@ -1,0 +1,32 @@
+vcompile_ps:
+
+set LIB_NAME="pulpino_lib"
+set LIB_PATH="${MSIM_LIBS_PATH}/${LIB_NAME}"
+
+rm -rf modelsim_libs
+vlib modelsim_libs          # creates directory: ./modelsim_libs
+
+rm -rf work
+vlib work                   # creates directory: ./work
+
+rm -rf $LIB_PATH            # deletes: ${MSIM_LIBS_PATH}/pulpino_lib
+vlib $LIB_PATH              # creates library at that path
+vmap $LIB_NAME $LIB_PATH    # maps logical lib name 'pulpino_lib' to that path
+
+
+ HOW vlog BEHAVES
+ModelSim's vlog -work <lib> compiles files into:
+
+    The library database at the specified -work location.
+
+    It creates .db, .dat, .vhdl, etc. files inside that library folder.
+
+YOUR COMPILE TARGETS
+✅ Synthesized Netlist
+
+vlog -quiet-sv -work /export/.../pulp_PnR.v
+This is incorrect usage. You're using -work <absolute_path_to_a_file>, which is invalid.
+ModelSim expects a library name (like work or pulpino_lib) with -work, not a path to a file.
+Dix this:
+vlog -quiet -sv -work $LIB_NAME ${PULP_PATH}/path/to/pulp_PnR.v
+Assuming $LIB_NAME is still set to "pulpino_lib" and vmap is done correctly.
