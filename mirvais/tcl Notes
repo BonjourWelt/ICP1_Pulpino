@@ -43,3 +43,6 @@ This executes the script in a separate Bash process, so:
     cd changes affect only that subprocess
 
     Environment pollution is contained
+
+
+variable names are case sensitive
