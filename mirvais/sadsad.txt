@@ -5,7 +5,8 @@ du -h --max-depth=1
 /Home
 
 #===========================================================
- scp -r milkfdsl@toke:/export... .
+ scp -r mi7857mo-s:/export/space/nobackup/pulp_attempt_15000 .
+where . is current folder on the host computer
 
 /export/space/nobackup/pulp_attempt_15000/Innovus/Initialize_Innovus
 
