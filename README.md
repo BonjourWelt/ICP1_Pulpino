@@ -93,6 +93,9 @@ To Do:
 -------
 ## 5.15 records
 1. Multiple design problem: restart terminal.
-
-
-
+---------
+## 6.5 Rtl compilation problem
+If: /
+** Error: Library std not found. /
+** Error: VHDL Compiler exiting /
+Delete modelsim_st65.ini and setup2022.efd, then re-copy from the standard pulpino directory.
