@@ -99,3 +99,5 @@ If: \
 ** Error: Library std not found. \
 ** Error: VHDL Compiler exiting \
 Delete modelsim_st65.ini and setup2022.efd, then re-copy from the standard pulpino directory.
+# power analysis
+Delete "current_design pulpino_top_pads" and all "set_dont_use ..." in SDC file or the analysis will get errors.
